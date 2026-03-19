@@ -29,11 +29,11 @@ export default function DashboardPage() {
       </div>
 
       {activeConnection && (
-        <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Plug className="h-5 w-5 text-primary" />
-            <div>
-              <p className="font-medium">Actieve verbinding: {activeConnection.name}</p>
+        <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Plug className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="font-medium truncate">Actieve verbinding: {activeConnection.name}</p>
               <p className="text-sm text-muted-foreground">
                 Omgeving {activeConnection.environmentNumber}
               </p>
@@ -57,7 +57,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Verbindingen</CardTitle>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
 
       <div>
         <h3 className="text-lg font-semibold mb-4">Snel starten</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           {[
             { href: "/connections", icon: Plug, title: "Verbinding maken", desc: "Configureer AFAS omgeving" },
             { href: "/explorer", icon: Search, title: "Data ophalen", desc: "GetConnector Explorer" },

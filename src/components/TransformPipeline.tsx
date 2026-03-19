@@ -52,7 +52,7 @@ function StepEditor({
       return (
         <div className="space-y-2">
           {mappings.map((m, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2">
               <Select
                 value={m.from}
                 onValueChange={(val) => {
@@ -61,7 +61,7 @@ function StepEditor({
                   onUpdate({ mappings: updated })
                 }}
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Van veld" />
                 </SelectTrigger>
                 <SelectContent>
@@ -70,9 +70,9 @@ function StepEditor({
                   ))}
                 </SelectContent>
               </Select>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
               <Input
-                className="w-[160px]"
+                className="w-full sm:w-[160px]"
                 placeholder="Nieuwe naam"
                 value={m.to}
                 onChange={(e) => {
@@ -102,14 +102,14 @@ function StepEditor({
       const formulaConfig = config as FormulaConfig
       return (
         <div className="space-y-2">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Veld</Label>
               <Select
                 value={formulaConfig.field || ""}
                 onValueChange={(val) => onUpdate({ ...formulaConfig, field: val })}
               >
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="Veld" />
                 </SelectTrigger>
                 <SelectContent>
@@ -134,12 +134,12 @@ function StepEditor({
     case "filter": {
       const filterConfig = config as FilterConfig
       return (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Select
             value={filterConfig.field || ""}
             onValueChange={(val) => onUpdate({ ...filterConfig, field: val })}
           >
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Veld" />
             </SelectTrigger>
             <SelectContent>
@@ -152,7 +152,7 @@ function StepEditor({
             value={filterConfig.operator || "equals"}
             onValueChange={(val) => onUpdate({ ...filterConfig, operator: val })}
           >
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -177,11 +177,11 @@ function StepEditor({
     case "calculated": {
       const calcConfig = config as CalculatedConfig
       return (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <div className="space-y-1">
             <Label className="text-xs">Nieuw veld</Label>
             <Input
-              className="w-[160px]"
+              className="w-full sm:w-[160px]"
               placeholder="Veldnaam"
               value={calcConfig.newField || ""}
               onChange={(e) => onUpdate({ ...calcConfig, newField: e.target.value })}

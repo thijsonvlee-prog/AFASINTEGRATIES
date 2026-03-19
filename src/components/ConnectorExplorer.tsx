@@ -72,7 +72,7 @@ export function ConnectorExplorer() {
         <p className="text-muted-foreground">Data ophalen uit AFAS Profit</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[300px_1fr]">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-[300px_1fr]">
         <div className="space-y-4">
           <Card>
             <CardHeader className="pb-3">

@@ -110,11 +110,11 @@ export function PipelineManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Pipelines</h2>
-          <p className="text-muted-foreground">
-            Herbruikbare workflows: GetConnector → Transformatie → UpdateConnector
+          <p className="text-muted-foreground text-sm">
+            Herbruikbare workflows: Get → Transformatie → Update
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -200,17 +200,17 @@ export function PipelineManager() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Badge variant="secondary">{pipeline.getConnector.name}</Badge>
-                <ArrowRight className="h-3 w-3" />
-                <Badge variant="secondary">{pipeline.transformSteps.length} stappen</Badge>
-                <ArrowRight className="h-3 w-3" />
-                <Badge variant="secondary">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
+                <Badge variant="secondary" className="text-xs">{pipeline.getConnector.name}</Badge>
+                <ArrowRight className="h-3 w-3 hidden sm:block" />
+                <Badge variant="secondary" className="text-xs">{pipeline.transformSteps.length} stappen</Badge>
+                <ArrowRight className="h-3 w-3 hidden sm:block" />
+                <Badge variant="secondary" className="text-xs">
                   {pipeline.updateConnector.name} ({pipeline.updateConnector.operation})
                 </Badge>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"

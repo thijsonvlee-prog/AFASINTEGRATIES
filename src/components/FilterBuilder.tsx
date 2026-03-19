@@ -42,7 +42,7 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium">Filters</h4>
         <Button size="sm" variant="outline" onClick={addFilter}>
-          <Plus className="mr-1 h-3 w-3" /> Filter toevoegen
+          <Plus className="mr-1 h-3 w-3" /> Filter
         </Button>
       </div>
 
@@ -51,12 +51,12 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
       )}
 
       {filters.map((filter, index) => (
-        <div key={filter.id} className="flex items-center gap-2">
+        <div key={filter.id} className="space-y-2 rounded-md border p-2 md:p-0 md:border-0 md:space-y-0 md:flex md:items-center md:gap-2">
           <Select
             value={filter.fieldId}
             onValueChange={(val) => updateFilter(index, { fieldId: val })}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full md:w-[200px]">
               <SelectValue placeholder="Veld" />
             </SelectTrigger>
             <SelectContent>
@@ -74,7 +74,7 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
               updateFilter(index, { operator: parseInt(val) as FilterOperator })
             }
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Operator" />
             </SelectTrigger>
             <SelectContent>
@@ -86,16 +86,17 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
             </SelectContent>
           </Select>
 
-          <Input
-            className="flex-1"
-            placeholder="Waarde"
-            value={filter.value}
-            onChange={(e) => updateFilter(index, { value: e.target.value })}
-          />
-
-          <Button size="icon" variant="ghost" onClick={() => removeFilter(index)}>
-            <Trash2 className="h-4 w-4 text-destructive" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              className="flex-1"
+              placeholder="Waarde"
+              value={filter.value}
+              onChange={(e) => updateFilter(index, { value: e.target.value })}
+            />
+            <Button size="icon" variant="ghost" onClick={() => removeFilter(index)}>
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
         </div>
       ))}
     </div>

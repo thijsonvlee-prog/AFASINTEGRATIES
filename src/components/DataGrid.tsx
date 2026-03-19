@@ -65,46 +65,48 @@ export function DataGrid({ data, onSort }: DataGridProps) {
         <p className="text-sm text-muted-foreground">{data.length} rijen</p>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={exportJSON}>
-            <Download className="mr-1 h-3 w-3" /> JSON
+            <Download className="mr-1 h-3 w-3" /> <span className="hidden sm:inline">JSON</span>
           </Button>
           <Button size="sm" variant="outline" onClick={exportCSV}>
-            <Download className="mr-1 h-3 w-3" /> CSV
+            <Download className="mr-1 h-3 w-3" /> <span className="hidden sm:inline">CSV</span>
           </Button>
         </div>
       </div>
 
-      <div className="rounded-md border overflow-auto max-h-[600px]">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 sticky top-0">
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col}
-                  className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-muted whitespace-nowrap"
-                  onClick={() => handleSort(col)}
-                >
-                  <div className="flex items-center gap-1">
-                    {col}
-                    <ArrowUpDown className="h-3 w-3 opacity-50" />
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, i) => (
-              <tr key={i} className="border-t hover:bg-muted/30">
+      <div className="rounded-md border overflow-x-auto -mx-4 md:mx-0">
+        <div className="min-w-[600px]">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 sticky top-0">
+              <tr>
                 {columns.map((col) => (
-                  <td key={col} className="px-3 py-2 whitespace-nowrap max-w-[300px] truncate">
-                    {row[col] === null || row[col] === undefined
-                      ? <span className="text-muted-foreground italic">null</span>
-                      : String(row[col])}
-                  </td>
+                  <th
+                    key={col}
+                    className="px-3 py-2 text-left font-medium cursor-pointer hover:bg-muted whitespace-nowrap text-xs md:text-sm"
+                    onClick={() => handleSort(col)}
+                  >
+                    <div className="flex items-center gap-1">
+                      {col}
+                      <ArrowUpDown className="h-3 w-3 opacity-50" />
+                    </div>
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.map((row, i) => (
+                <tr key={i} className="border-t hover:bg-muted/30">
+                  {columns.map((col) => (
+                    <td key={col} className="px-3 py-2 whitespace-nowrap max-w-[200px] md:max-w-[300px] truncate text-xs md:text-sm">
+                      {row[col] === null || row[col] === undefined
+                        ? <span className="text-muted-foreground italic">null</span>
+                        : String(row[col])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

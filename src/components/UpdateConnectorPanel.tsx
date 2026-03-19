@@ -180,7 +180,7 @@ export function UpdateConnectorPanel() {
         <p className="text-muted-foreground">Data terugschrijven naar AFAS Profit</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Connector & Operatie</CardTitle>
@@ -247,12 +247,12 @@ export function UpdateConnectorPanel() {
               </p>
             )}
             {fieldMappings.map((mapping, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border p-2 sm:p-0 sm:border-0">
                 <Select
                   value={mapping.sourceField}
                   onValueChange={(val) => updateMapping(index, { sourceField: val })}
                 >
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="w-full sm:w-[160px]">
                     <SelectValue placeholder="Bronveld" />
                   </SelectTrigger>
                   <SelectContent>
@@ -261,30 +261,32 @@ export function UpdateConnectorPanel() {
                     ))}
                   </SelectContent>
                 </Select>
-                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                <Select
-                  value={mapping.targetField}
-                  onValueChange={(val) => updateMapping(index, { targetField: val })}
-                >
-                  <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Doelveld" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {schemaFields.map((f) => (
-                      <SelectItem key={f} value={f}>{f}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button size="icon" variant="ghost" onClick={() => removeMapping(index)}>
-                  <Trash2 className="h-3 w-3 text-destructive" />
-                </Button>
+                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 hidden sm:block" />
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={mapping.targetField}
+                    onValueChange={(val) => updateMapping(index, { targetField: val })}
+                  >
+                    <SelectTrigger className="w-full sm:w-[160px]">
+                      <SelectValue placeholder="Doelveld" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {schemaFields.map((f) => (
+                        <SelectItem key={f} value={f}>{f}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="icon" variant="ghost" onClick={() => removeMapping(index)}>
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Button variant="outline" onClick={handleDryRun} disabled={previewData.length === 0 || fieldMappings.length === 0}>
           <Eye className="mr-2 h-4 w-4" /> Dry Run (Preview)
         </Button>
