@@ -22,7 +22,8 @@ export function readData<T>(name: string, defaultValue: T): T {
   try {
     const raw = fs.readFileSync(filePath, "utf-8")
     return JSON.parse(raw)
-  } catch {
+  } catch (error) {
+    console.error(`[Storage] Fout bij lezen ${name}:`, error)
     return defaultValue
   }
 }
@@ -30,5 +31,10 @@ export function readData<T>(name: string, defaultValue: T): T {
 export function writeData<T>(name: string, data: T): void {
   ensureDir()
   const filePath = getFilePath(name)
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8")
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8")
+  } catch (error) {
+    console.error(`[Storage] Fout bij schrijven ${name}:`, error)
+    throw new Error(`Kan data niet opslaan naar ${name}: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }

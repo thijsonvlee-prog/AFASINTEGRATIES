@@ -5,6 +5,7 @@ import { useConnectionStore } from "@/store/connectionStore"
 import { useConnectorStore } from "@/store/connectorStore"
 import { useTransformStore } from "@/store/transformStore"
 import { useToastStore } from "@/store/toastStore"
+import { apiFetch } from "@/lib/apiFetch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -47,11 +48,11 @@ export function UpdateConnectorPanel() {
 
   useEffect(() => {
     if (activeConnectionId && selectedConnector) {
-      fetch(`/api/afas/metainfo/update/${encodeURIComponent(selectedConnector)}`, {
+      apiFetch<Record<string, unknown>>(`/api/afas/metainfo/update/${encodeURIComponent(selectedConnector)}`, {
         headers: { "x-connection-id": activeConnectionId },
       })
-        .then((r) => r.json())
-        .then((data) => {
+        .then((res) => {
+          const data = res.data
           setSchema(data)
           const fields: string[] = []
           const extractFields = (obj: Record<string, unknown>, prefix = "") => {
@@ -134,7 +135,7 @@ export function UpdateConnectorPanel() {
       }
 
       try {
-        const res = await fetch(
+        const res = await apiFetch(
           `/api/afas/connectors/${encodeURIComponent(selectedConnector)}`,
           {
             method: operation,
@@ -150,8 +151,7 @@ export function UpdateConnectorPanel() {
           success++
         } else {
           failed++
-          const err = await res.json().catch(() => ({}))
-          console.error("AFAS error:", err)
+          console.error("AFAS error:", res.data)
         }
       } catch (err) {
         failed++

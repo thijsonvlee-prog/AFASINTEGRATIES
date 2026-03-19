@@ -1,6 +1,7 @@
 "use client"
 
 import { create } from "zustand"
+import { apiFetch } from "@/lib/apiFetch"
 import type { ConnectionProfilePublic, EnvironmentType } from "@/types"
 
 interface ConnectionState {
@@ -41,44 +42,58 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   fetchConnections: async () => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch("/api/connections")
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      set({ connections: data, loading: false })
+      const res = await apiFetch<ConnectionProfilePublic[]>("/api/connections")
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || `HTTP ${res.status}`)
+      }
+      set({ connections: res.data, loading: false })
     } catch (error) {
-      set({ error: "Kon verbindingen niet laden", loading: false })
+      const message = error instanceof Error ? error.message : "Onbekende fout"
+      console.error("[ConnectionStore] fetchConnections mislukt:", message)
+      set({ error: `Kon verbindingen niet laden: ${message}`, loading: false })
     }
   },
 
   fetchActiveConnection: async () => {
     try {
-      const res = await fetch("/api/connections/activate")
-      if (res.ok) {
-        const data = await res.json()
-        if (data.activeConnectionId) {
-          set({ activeConnectionId: data.activeConnectionId })
-        }
+      const res = await apiFetch<{ activeConnectionId?: string }>("/api/connections/activate")
+      if (res.ok && res.data?.activeConnectionId) {
+        set({ activeConnectionId: res.data.activeConnectionId })
       }
-    } catch {
-      // silent
+    } catch (error) {
+      console.error("[ConnectionStore] fetchActiveConnection mislukt:", error)
     }
   },
 
   addConnection: async (data) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch("/api/connections", {
+      const res = await apiFetch("/api/connections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
+
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Onbekende fout" }))
-        throw new Error(err.error || `HTTP ${res.status}`)
+        const err = res.data as unknown as Record<string, string>
+        const errorMsg = err?.details
+          ? `${err.error}: ${err.details}`
+          : err?.error || `Server fout (HTTP ${res.status})`
+        throw new Error(errorMsg)
       }
-      await get().fetchConnections()
+
+      // POST geslaagd - haal de lijst opnieuw op
+      try {
+        await get().fetchConnections()
+      } catch {
+        console.warn("[ConnectionStore] fetchConnections na POST mislukt, maar verbinding is opgeslagen")
+        set({ loading: false })
+      }
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout bij aanmaken", loading: false })
+      const message = error instanceof Error ? error.message : "Onbekende fout bij opslaan"
+      console.error("[ConnectionStore] addConnection mislukt:", message)
+      set({ error: message, loading: false })
       throw error
     }
   },
@@ -86,59 +101,72 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
   updateConnection: async (data) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch("/api/connections", {
+      const res = await apiFetch("/api/connections", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error("Verbinding bijwerken mislukt")
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || "Verbinding bijwerken mislukt")
+      }
       await get().fetchConnections()
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout", loading: false })
+      const message = error instanceof Error ? error.message : "Fout bij bijwerken"
+      console.error("[ConnectionStore] updateConnection mislukt:", message)
+      set({ error: message, loading: false })
     }
   },
 
   deleteConnection: async (id) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch(`/api/connections?id=${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Verbinding verwijderen mislukt")
+      const res = await apiFetch(`/api/connections?id=${id}`, { method: "DELETE" })
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || "Verbinding verwijderen mislukt")
+      }
       const state = get()
       if (state.activeConnectionId === id) {
         set({ activeConnectionId: null })
       }
       await get().fetchConnections()
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout", loading: false })
+      const message = error instanceof Error ? error.message : "Fout bij verwijderen"
+      console.error("[ConnectionStore] deleteConnection mislukt:", message)
+      set({ error: message, loading: false })
     }
   },
 
   setActiveConnection: async (id) => {
     try {
-      const res = await fetch("/api/connections/activate", {
+      const res = await apiFetch("/api/connections/activate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ connectionId: id }),
       })
-      if (!res.ok) throw new Error("Activering mislukt")
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || "Activering mislukt")
+      }
       set({ activeConnectionId: id })
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout" })
+      const message = error instanceof Error ? error.message : "Fout bij activeren"
+      console.error("[ConnectionStore] setActiveConnection mislukt:", message)
+      set({ error: message })
     }
   },
 
   testConnection: async (data) => {
     try {
-      const res = await fetch("/api/connections/test", {
+      const res = await apiFetch<{ success: boolean; message: string; data?: unknown }>("/api/connections/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      const json = await res.json()
-      // Als de HTTP status niet OK is maar we toch een JSON response hebben,
-      // return de response (bevat success: false + message)
-      return json
-    } catch {
+      return res.data
+    } catch (error) {
+      console.error("[ConnectionStore] testConnection mislukt:", error)
       return { success: false, message: "Verbindingstest mislukt - netwerk fout" }
     }
   },

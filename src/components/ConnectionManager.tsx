@@ -88,8 +88,15 @@ export function ConnectionManager() {
         title: "Verbinding opgeslagen",
         description: `"${name}" is toegevoegd aan je verbindingen`,
       })
-    } catch {
-      addToast({ type: "error", title: "Fout bij opslaan", description: "Probeer het opnieuw" })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Onbekende fout"
+      console.error("[ConnectionManager] Opslaan mislukt:", message, error)
+      addToast({
+        type: "error",
+        title: "Fout bij opslaan",
+        description: message,
+        duration: 8000,
+      })
     }
   }
 

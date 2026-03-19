@@ -1,6 +1,7 @@
 "use client"
 
 import { create } from "zustand"
+import { apiFetch } from "@/lib/apiFetch"
 import type { ConnectorMeta, GetConnectorField, FilterRule, SortRule } from "@/types"
 
 interface ConnectorState {
@@ -43,32 +44,40 @@ export const useConnectorStore = create<ConnectorState>((set, get) => ({
   fetchMetaInfo: async (connectionId) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch("/api/afas/metainfo", {
+      const res = await apiFetch<Record<string, unknown>>("/api/afas/metainfo", {
         headers: { "x-connection-id": connectionId },
       })
-      if (!res.ok) throw new Error("MetaInfo ophalen mislukt")
-      const data = await res.json()
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || "MetaInfo ophalen mislukt")
+      }
       set({
-        getConnectors: data.getConnectors || data.GetConnectors || [],
-        updateConnectors: data.updateConnectors || data.UpdateConnectors || [],
+        getConnectors: (res.data.getConnectors || res.data.GetConnectors || []) as ConnectorMeta[],
+        updateConnectors: (res.data.updateConnectors || res.data.UpdateConnectors || []) as ConnectorMeta[],
         loading: false,
       })
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout", loading: false })
+      const message = error instanceof Error ? error.message : "Fout"
+      console.error("[ConnectorStore] fetchMetaInfo mislukt:", message)
+      set({ error: message, loading: false })
     }
   },
 
   fetchGetConnectorFields: async (connectionId, connectorName) => {
     set({ loading: true, error: null })
     try {
-      const res = await fetch(`/api/afas/metainfo/get/${encodeURIComponent(connectorName)}`, {
+      const res = await apiFetch<Record<string, unknown>>(`/api/afas/metainfo/get/${encodeURIComponent(connectorName)}`, {
         headers: { "x-connection-id": connectionId },
       })
-      if (!res.ok) throw new Error("Connector velden ophalen mislukt")
-      const data = await res.json()
-      set({ getConnectorFields: data.fields || data.Fields || [], loading: false })
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || "Connector velden ophalen mislukt")
+      }
+      set({ getConnectorFields: (res.data.fields || res.data.Fields || []) as GetConnectorField[], loading: false })
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout", loading: false })
+      const message = error instanceof Error ? error.message : "Fout"
+      console.error("[ConnectorStore] fetchGetConnectorFields mislukt:", message)
+      set({ error: message, loading: false })
     }
   },
 
@@ -91,19 +100,24 @@ export const useConnectorStore = create<ConnectorState>((set, get) => ({
         )
       }
 
-      const res = await fetch(
+      const res = await apiFetch<Record<string, unknown>>(
         `/api/afas/connectors/${encodeURIComponent(connectorName)}?${params.toString()}`,
         { headers: { "x-connection-id": connectionId } }
       )
-      if (!res.ok) throw new Error("Data ophalen mislukt")
-      const data = await res.json()
+      if (!res.ok) {
+        const err = res.data as unknown as Record<string, string>
+        throw new Error(err?.error || "Data ophalen mislukt")
+      }
+      const rows = (res.data.rows || res.data.Rows || []) as Record<string, unknown>[]
       set({
-        connectorData: data.rows || data.Rows || [],
-        totalRows: data.rows?.length || data.Rows?.length || 0,
+        connectorData: rows,
+        totalRows: rows.length,
         loading: false,
       })
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout", loading: false })
+      const message = error instanceof Error ? error.message : "Fout"
+      console.error("[ConnectorStore] fetchConnectorData mislukt:", message)
+      set({ error: message, loading: false })
     }
   },
 
