@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import { Sidebar } from "@/components/Sidebar"
+import { ToastContainer } from "@/components/ToastContainer"
 
 export const metadata: Metadata = {
   title: "AFAS Integratieplatform",
@@ -23,10 +24,13 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <div className="flex h-screen">
           <Sidebar />
-          <main className="flex-1 overflow-auto pt-14 md:pt-0">
-            <div className="mx-auto p-4 md:p-6 max-w-7xl">{children}</div>
+          <main className="flex-1 overflow-auto pt-14 md:pt-0 bg-background">
+            <div className="mx-auto p-4 md:p-8 max-w-7xl animate-fade-in">
+              {children}
+            </div>
           </main>
         </div>
+        <ToastContainer />
       </body>
     </html>
   )

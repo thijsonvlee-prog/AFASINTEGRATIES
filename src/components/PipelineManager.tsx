@@ -5,6 +5,7 @@ import { usePipelineStore } from "@/store/pipelineStore"
 import { useConnectionStore } from "@/store/connectionStore"
 import { useConnectorStore } from "@/store/connectorStore"
 import { useTransformStore } from "@/store/transformStore"
+import { useToastStore } from "@/store/toastStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +24,7 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRight,
+  GitBranch,
 } from "lucide-react"
 import type { Pipeline, PipelineExecution } from "@/types"
 
@@ -41,6 +43,7 @@ export function PipelineManager() {
   const { activeConnectionId, connections } = useConnectionStore()
   const { selectedGetConnector, filters, sortFields, take } = useConnectorStore()
   const { steps, fieldMappings } = useTransformStore()
+  const { addToast } = useToastStore()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [pipelineName, setPipelineName] = useState("")
@@ -83,16 +86,27 @@ export function PipelineManager() {
     setPipelineName("")
     setPipelineDesc("")
     setDialogOpen(false)
+    addToast({ type: "success", title: "Pipeline aangemaakt", description: `"${pipelineName}" is opgeslagen` })
   }
 
-  const handleExecute = async (id: string, dryRun = false) => {
+  const handleExecute = async (id: string, name: string, dryRun = false) => {
     setExecutingId(id)
     const result = await executePipeline(id, dryRun)
     if (result) {
       setLastResult({ pipelineId: id, ...result })
       await fetchExecutionLog(id)
+      addToast({
+        type: result.execution.status === "success" ? "success" : "error",
+        title: dryRun ? "Dry Run klaar" : (result.execution.status === "success" ? "Pipeline geslaagd" : "Pipeline mislukt"),
+        description: `${result.execution.recordsProcessed} verwerkt, ${result.execution.recordsFailed} mislukt`,
+      })
     }
     setExecutingId(null)
+  }
+
+  const handleDelete = async (id: string, name: string) => {
+    await deletePipeline(id)
+    addToast({ type: "info", title: "Pipeline verwijderd", description: `"${name}" is verwijderd` })
   }
 
   const toggleExpand = async (id: string) => {
@@ -156,10 +170,10 @@ export function PipelineManager() {
                 />
               </div>
 
-              <div className="rounded-md bg-muted p-3 text-sm space-y-1">
-                <p><strong>GetConnector:</strong> {selectedGetConnector}</p>
-                <p><strong>Transformatiestappen:</strong> {steps.length}</p>
-                <p><strong>Field mappings:</strong> {fieldMappings.length}</p>
+              <div className="rounded-xl bg-muted/50 p-4 text-sm space-y-1.5">
+                <p><span className="font-medium">GetConnector:</span> {selectedGetConnector}</p>
+                <p><span className="font-medium">Transformatiestappen:</span> {steps.length}</p>
+                <p><span className="font-medium">Field mappings:</span> {fieldMappings.length}</p>
               </div>
             </div>
             <DialogFooter>
@@ -172,11 +186,13 @@ export function PipelineManager() {
       </div>
 
       {pipelines.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Clock className="h-12 w-12 mb-4" />
-            <p className="text-lg font-medium">Nog geen pipelines</p>
-            <p className="text-sm">
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 mb-4">
+              <GitBranch className="h-7 w-7 text-emerald-500" />
+            </div>
+            <p className="text-lg font-semibold text-foreground">Nog geen pipelines</p>
+            <p className="text-sm text-center max-w-xs">
               Configureer een GetConnector, transformatie en UpdateConnector om een pipeline te maken
             </p>
           </CardContent>
@@ -185,27 +201,25 @@ export function PipelineManager() {
 
       <div className="space-y-4">
         {pipelines.map((pipeline) => (
-          <Card key={pipeline.id}>
+          <Card key={pipeline.id} className="hover:shadow-card-hover transition-all duration-200">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">{pipeline.name}</CardTitle>
+                  <CardTitle className="text-base">{pipeline.name}</CardTitle>
                   {pipeline.description && (
-                    <CardDescription>{pipeline.description}</CardDescription>
+                    <CardDescription className="mt-0.5">{pipeline.description}</CardDescription>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{getConnectionName(pipeline.connectionId)}</Badge>
-                </div>
+                <Badge variant="outline" className="font-normal">{getConnectionName(pipeline.connectionId)}</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-sm">
-                <Badge variant="secondary" className="text-xs">{pipeline.getConnector.name}</Badge>
-                <ArrowRight className="h-3 w-3 hidden sm:block" />
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <Badge variant="info" className="text-xs">{pipeline.getConnector.name}</Badge>
+                <ArrowRight className="h-3 w-3 text-muted-foreground hidden sm:block" />
                 <Badge variant="secondary" className="text-xs">{pipeline.transformSteps.length} stappen</Badge>
-                <ArrowRight className="h-3 w-3 hidden sm:block" />
-                <Badge variant="secondary" className="text-xs">
+                <ArrowRight className="h-3 w-3 text-muted-foreground hidden sm:block" />
+                <Badge variant="warning" className="text-xs">
                   {pipeline.updateConnector.name} ({pipeline.updateConnector.operation})
                 </Badge>
               </div>
@@ -214,14 +228,14 @@ export function PipelineManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleExecute(pipeline.id, true)}
+                  onClick={() => handleExecute(pipeline.id, pipeline.name, true)}
                   disabled={executingId === pipeline.id}
                 >
                   <Eye className="mr-1 h-3 w-3" /> Dry Run
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => handleExecute(pipeline.id)}
+                  onClick={() => handleExecute(pipeline.id, pipeline.name)}
                   disabled={executingId === pipeline.id}
                 >
                   {executingId === pipeline.id ? (
@@ -247,8 +261,8 @@ export function PipelineManager() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="text-destructive"
-                  onClick={() => deletePipeline(pipeline.id)}
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => handleDelete(pipeline.id, pipeline.name)}
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -256,23 +270,23 @@ export function PipelineManager() {
 
               {lastResult && lastResult.pipelineId === pipeline.id && (
                 <div
-                  className={`rounded-md p-3 text-sm ${
+                  className={`rounded-xl p-4 text-sm animate-scale-in ${
                     lastResult.execution.status === "success"
-                      ? "bg-green-50 border border-green-200 text-green-800"
+                      ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
                       : "bg-red-50 border border-red-200 text-red-800"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                  <div className="flex items-center gap-2 font-semibold mb-1">
                     {lastResult.execution.status === "success" ? (
-                      <CheckCircle className="h-4 w-4" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 animate-success-pop" />
                     ) : (
-                      <XCircle className="h-4 w-4" />
+                      <XCircle className="h-4 w-4 text-red-500" />
                     )}
                     {lastResult.execution.recordsProcessed} verwerkt,{" "}
                     {lastResult.execution.recordsFailed} mislukt
                   </div>
                   {lastResult.preview && (
-                    <pre className="mt-2 rounded bg-white/50 p-2 text-xs overflow-auto max-h-[200px]">
+                    <pre className="mt-2 rounded-lg bg-white/50 p-2 text-xs overflow-auto max-h-[200px] font-mono">
                       {JSON.stringify(lastResult.preview, null, 2)}
                     </pre>
                   )}
@@ -280,8 +294,8 @@ export function PipelineManager() {
               )}
 
               {expandedPipeline === pipeline.id && executions[pipeline.id] && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Uitvoerlog</h4>
+                <div className="space-y-2 animate-slide-up">
+                  <h4 className="text-sm font-semibold">Uitvoerlog</h4>
                   {executions[pipeline.id].length === 0 && (
                     <p className="text-sm text-muted-foreground">Nog niet uitgevoerd</p>
                   )}
@@ -302,33 +316,33 @@ function ExecutionEntry({ execution }: { execution: PipelineExecution }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-md border p-3 text-sm">
+    <div className="rounded-lg border p-3 text-sm bg-card">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-2">
           {execution.status === "success" ? (
-            <CheckCircle className="h-3 w-3 text-green-600" />
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
           ) : execution.status === "error" ? (
-            <XCircle className="h-3 w-3 text-red-600" />
+            <XCircle className="h-3.5 w-3.5 text-red-500" />
           ) : (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
           )}
           <span className="font-medium">
             {new Date(execution.startedAt).toLocaleString("nl-NL")}
           </span>
-          <Badge variant={execution.status === "success" ? "success" : "destructive"}>
+          <Badge variant={execution.status === "success" ? "success" : "destructive"} className="text-xs">
             {execution.status}
           </Badge>
         </div>
-        <span className="text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           {execution.recordsProcessed} verwerkt, {execution.recordsFailed} mislukt
         </span>
       </div>
 
       {expanded && execution.logs.length > 0 && (
-        <div className="mt-2 space-y-1 border-t pt-2">
+        <div className="mt-3 space-y-1 border-t pt-3">
           {execution.logs.map((log, i) => (
             <div
               key={i}
@@ -336,14 +350,17 @@ function ExecutionEntry({ execution }: { execution: PipelineExecution }) {
                 log.level === "error"
                   ? "text-red-600"
                   : log.level === "warn"
-                  ? "text-yellow-600"
+                  ? "text-amber-600"
                   : "text-muted-foreground"
               }`}
             >
-              <span className="font-mono">
+              <span className="font-mono text-[10px] opacity-60">
                 {new Date(log.timestamp).toLocaleTimeString("nl-NL")}
               </span>{" "}
-              [{log.level}] {log.message}
+              <Badge variant={log.level === "error" ? "destructive" : log.level === "warn" ? "warning" : "secondary"} className="text-[10px] px-1.5 py-0">
+                {log.level}
+              </Badge>{" "}
+              {log.message}
             </div>
           ))}
         </div>

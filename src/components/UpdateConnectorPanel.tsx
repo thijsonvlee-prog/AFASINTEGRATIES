@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react"
 import { useConnectionStore } from "@/store/connectionStore"
 import { useConnectorStore } from "@/store/connectorStore"
 import { useTransformStore } from "@/store/transformStore"
+import { useToastStore } from "@/store/toastStore"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,6 +21,7 @@ import {
   Trash2,
   Plus,
   XCircle,
+  Upload,
 } from "lucide-react"
 import type { FieldMapping } from "@/types"
 
@@ -27,6 +29,7 @@ export function UpdateConnectorPanel() {
   const { activeConnectionId } = useConnectionStore()
   const { updateConnectors, fetchMetaInfo } = useConnectorStore()
   const { previewData, fieldMappings, setFieldMappings } = useTransformStore()
+  const { addToast } = useToastStore()
 
   const [selectedConnector, setSelectedConnector] = useState<string>("")
   const [schema, setSchema] = useState<unknown>(null)
@@ -50,7 +53,6 @@ export function UpdateConnectorPanel() {
         .then((r) => r.json())
         .then((data) => {
           setSchema(data)
-          // Extract field names from schema
           const fields: string[] = []
           const extractFields = (obj: Record<string, unknown>, prefix = "") => {
             if (obj.fields || obj.Fields) {
@@ -106,6 +108,7 @@ export function UpdateConnectorPanel() {
     })
 
     setDryRunResult(mapped)
+    addToast({ type: "info", title: "Dry Run klaar", description: "Preview van 5 records gegenereerd" })
   }
 
   const handleExecute = async () => {
@@ -155,19 +158,28 @@ export function UpdateConnectorPanel() {
       }
     }
 
-    setExecuteResult({
+    const result = {
       success: failed === 0,
       message: `${success} records verwerkt, ${failed} mislukt`,
-    })
+    }
+    setExecuteResult(result)
     setLoading(false)
+    addToast({
+      type: failed === 0 ? "success" : "error",
+      title: failed === 0 ? "Uitvoering geslaagd" : "Uitvoering met fouten",
+      description: result.message,
+    })
   }
 
   if (!activeConnectionId) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">Geen actieve verbinding</p>
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 mb-4">
+            <Upload className="h-7 w-7 text-violet-500" />
+          </div>
+          <p className="text-lg font-semibold">Geen actieve verbinding</p>
+          <p className="text-sm text-muted-foreground">Activeer een verbinding om data te schrijven</p>
         </CardContent>
       </Card>
     )
@@ -177,13 +189,18 @@ export function UpdateConnectorPanel() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">UpdateConnector</h2>
-        <p className="text-muted-foreground">Data terugschrijven naar AFAS Profit</p>
+        <p className="text-muted-foreground text-sm">Data terugschrijven naar AFAS Profit</p>
       </div>
 
       <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Connector & Operatie</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-100">
+                <Upload className="h-3.5 w-3.5 text-violet-600" />
+              </div>
+              Connector & Operatie
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -219,10 +236,10 @@ export function UpdateConnectorPanel() {
             {schema ? (
               <div className="space-y-2">
                 <Label>Schema velden</Label>
-                <div className="rounded-md border p-3 max-h-[200px] overflow-auto">
+                <div className="rounded-xl border p-3 max-h-[200px] overflow-auto bg-muted/30">
                   <div className="flex flex-wrap gap-1">
                     {schemaFields.map((f) => (
-                      <Badge key={f} variant="secondary" className="text-xs">{f}</Badge>
+                      <Badge key={f} variant="secondary" className="text-xs font-mono">{f}</Badge>
                     ))}
                   </div>
                 </div>
@@ -234,7 +251,12 @@ export function UpdateConnectorPanel() {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Field Mapping</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-100">
+                  <ArrowRight className="h-3.5 w-3.5 text-amber-600" />
+                </div>
+                Field Mapping
+              </CardTitle>
               <Button size="sm" variant="outline" onClick={addMapping}>
                 <Plus className="mr-1 h-3 w-3" /> Mapping
               </Button>
@@ -247,12 +269,12 @@ export function UpdateConnectorPanel() {
               </p>
             )}
             {fieldMappings.map((mapping, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border p-2 sm:p-0 sm:border-0">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg border p-2.5 sm:p-2 bg-muted/20">
                 <Select
                   value={mapping.sourceField}
                   onValueChange={(val) => updateMapping(index, { sourceField: val })}
                 >
-                  <SelectTrigger className="w-full sm:w-[160px]">
+                  <SelectTrigger className="w-full sm:w-[140px]">
                     <SelectValue placeholder="Bronveld" />
                   </SelectTrigger>
                   <SelectContent>
@@ -267,7 +289,7 @@ export function UpdateConnectorPanel() {
                     value={mapping.targetField}
                     onValueChange={(val) => updateMapping(index, { targetField: val })}
                   >
-                    <SelectTrigger className="w-full sm:w-[160px]">
+                    <SelectTrigger className="w-full sm:w-[140px]">
                       <SelectValue placeholder="Doelveld" />
                     </SelectTrigger>
                     <SelectContent>
@@ -302,24 +324,28 @@ export function UpdateConnectorPanel() {
 
       {executeResult && (
         <div
-          className={`flex items-center gap-2 rounded-md p-4 ${
+          className={`flex items-center gap-3 rounded-xl p-4 animate-scale-in ${
             executeResult.success
-              ? "bg-green-50 border border-green-200 text-green-800"
+              ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
               : "bg-red-50 border border-red-200 text-red-800"
           }`}
         >
-          {executeResult.success ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-          {executeResult.message}
+          {executeResult.success ? (
+            <CheckCircle className="h-5 w-5 text-emerald-500 animate-success-pop" />
+          ) : (
+            <XCircle className="h-5 w-5 text-red-500" />
+          )}
+          <span className="font-medium">{executeResult.message}</span>
         </div>
       )}
 
       {dryRunResult && (
-        <Card>
+        <Card className="animate-slide-up">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Dry Run - Preview JSON Payload</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="rounded-md bg-muted p-4 overflow-auto text-xs max-h-[400px]">
+            <pre className="rounded-xl bg-muted/50 p-4 overflow-auto text-xs max-h-[400px] font-mono">
               {JSON.stringify(dryRunResult, null, 2)}
             </pre>
           </CardContent>

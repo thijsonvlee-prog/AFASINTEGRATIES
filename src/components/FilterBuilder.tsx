@@ -40,7 +40,7 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">Filters</h4>
+        <h4 className="text-sm font-semibold">Filters</h4>
         <Button size="sm" variant="outline" onClick={addFilter}>
           <Plus className="mr-1 h-3 w-3" /> Filter
         </Button>
@@ -51,12 +51,12 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
       )}
 
       {filters.map((filter, index) => (
-        <div key={filter.id} className="space-y-2 rounded-md border p-2 md:p-0 md:border-0 md:space-y-0 md:flex md:items-center md:gap-2">
+        <div key={filter.id} className="space-y-2 rounded-lg border p-2.5 bg-muted/20 md:p-2.5 md:space-y-0 md:flex md:items-center md:gap-2">
           <Select
             value={filter.fieldId}
             onValueChange={(val) => updateFilter(index, { fieldId: val })}
           >
-            <SelectTrigger className="w-full md:w-[200px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Veld" />
             </SelectTrigger>
             <SelectContent>
@@ -74,7 +74,7 @@ export function FilterBuilder({ filters, fields, onChange }: FilterBuilderProps)
               updateFilter(index, { operator: parseInt(val) as FilterOperator })
             }
           >
-            <SelectTrigger className="w-full md:w-[180px]">
+            <SelectTrigger className="w-full md:w-[160px]">
               <SelectValue placeholder="Operator" />
             </SelectTrigger>
             <SelectContent>

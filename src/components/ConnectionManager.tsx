@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useConnectionStore } from "@/store/connectionStore"
+import { useToastStore } from "@/store/toastStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
-import { Plus, Trash2, CheckCircle, XCircle, Loader2, Plug, Star } from "lucide-react"
+import { Plus, Trash2, CheckCircle, XCircle, Loader2, Plug, Star, Zap } from "lucide-react"
 import type { EnvironmentType } from "@/types"
 
 const ENV_TYPE_LABELS: Record<EnvironmentType, string> = {
@@ -18,9 +19,9 @@ const ENV_TYPE_LABELS: Record<EnvironmentType, string> = {
   accept: "Accept",
 }
 
-const ENV_TYPE_BADGE_VARIANT: Record<EnvironmentType, "destructive" | "secondary" | "warning"> = {
+const ENV_TYPE_BADGE_VARIANT: Record<EnvironmentType, "destructive" | "info" | "warning"> = {
   production: "destructive",
-  test: "secondary",
+  test: "info",
   accept: "warning",
 }
 
@@ -36,6 +37,7 @@ export function ConnectionManager() {
     setActiveConnection,
     testConnection,
   } = useConnectionStore()
+  const { addToast } = useToastStore()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [name, setName] = useState("")
@@ -60,6 +62,11 @@ export function ConnectionManager() {
     })
     setTestResult(result)
     setTesting(false)
+    addToast({
+      type: result.success ? "success" : "error",
+      title: result.success ? "Verbinding geslaagd" : "Verbinding mislukt",
+      description: result.message,
+    })
   }
 
   const handleAdd = async () => {
@@ -76,9 +83,32 @@ export function ConnectionManager() {
       setEnvironmentType("test")
       setTestResult(null)
       setDialogOpen(false)
+      addToast({
+        type: "success",
+        title: "Verbinding opgeslagen",
+        description: `"${name}" is toegevoegd aan je verbindingen`,
+      })
     } catch {
-      // error is al in de store gezet
+      addToast({ type: "error", title: "Fout bij opslaan", description: "Probeer het opnieuw" })
     }
+  }
+
+  const handleSetActive = async (id: string, connName: string) => {
+    await setActiveConnection(id)
+    addToast({
+      type: "success",
+      title: "Verbinding geactiveerd",
+      description: `"${connName}" is nu actief`,
+    })
+  }
+
+  const handleDelete = async (id: string, connName: string) => {
+    await deleteConnection(id)
+    addToast({
+      type: "info",
+      title: "Verbinding verwijderd",
+      description: `"${connName}" is verwijderd`,
+    })
   }
 
   const handleTestExisting = async (connectionId: string) => {
@@ -87,6 +117,11 @@ export function ConnectionManager() {
     const result = await testConnection({ connectionId })
     setTestResult(result)
     setTesting(false)
+    addToast({
+      type: result.success ? "success" : "error",
+      title: result.success ? "Verbinding OK" : "Verbinding mislukt",
+      description: result.message,
+    })
   }
 
   return (
@@ -94,7 +129,7 @@ export function ConnectionManager() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Verbindingen</h2>
-          <p className="text-muted-foreground">Beheer je AFAS Profit omgevingen</p>
+          <p className="text-muted-foreground text-sm">Beheer je AFAS Profit omgevingen</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -163,18 +198,18 @@ export function ConnectionManager() {
 
               {testResult && (
                 <div
-                  className={`flex items-center gap-2 rounded-md p-3 text-sm ${
+                  className={`flex items-center gap-3 rounded-xl p-3.5 text-sm animate-scale-in ${
                     testResult.success
-                      ? "bg-green-50 text-green-800 border border-green-200"
+                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                       : "bg-red-50 text-red-800 border border-red-200"
                   }`}
                 >
                   {testResult.success ? (
-                    <CheckCircle className="h-4 w-4" />
+                    <CheckCircle className="h-4 w-4 text-emerald-500 animate-success-pop" />
                   ) : (
-                    <XCircle className="h-4 w-4" />
+                    <XCircle className="h-4 w-4 text-red-500" />
                   )}
-                  {testResult.message}
+                  <span className="font-medium">{testResult.message}</span>
                 </div>
               )}
             </div>
@@ -192,18 +227,20 @@ export function ConnectionManager() {
       </div>
 
       {loading && connections.length === 0 && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
         </div>
       )}
 
       {connections.length === 0 && !loading && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Plug className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium">Nog geen verbindingen</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Maak een verbinding aan om te starten met AFAS
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-100 mb-4">
+              <Zap className="h-7 w-7 text-violet-500" />
+            </div>
+            <p className="text-lg font-semibold">Nog geen verbindingen</p>
+            <p className="text-sm text-muted-foreground mb-5 text-center max-w-xs">
+              Maak je eerste verbinding aan om te starten met AFAS Profit
             </p>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Eerste verbinding toevoegen
@@ -215,21 +252,22 @@ export function ConnectionManager() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {connections.map((conn) => {
           const envType = conn.environmentType || "production"
+          const isActive = activeConnectionId === conn.id
           return (
             <Card
               key={conn.id}
-              className={`cursor-pointer transition-all ${
-                activeConnectionId === conn.id
-                  ? "ring-2 ring-primary border-primary"
-                  : "hover:border-primary/50"
+              className={`transition-all duration-200 ${
+                isActive
+                  ? "ring-2 ring-primary/50 border-primary/30 shadow-glow"
+                  : "hover:shadow-card-hover hover:-translate-y-0.5"
               }`}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{conn.name}</CardTitle>
-                  <div className="flex items-center gap-2">
-                    {activeConnectionId === conn.id && (
-                      <Badge variant="success">Actief</Badge>
+                  <CardTitle className="text-base">{conn.name}</CardTitle>
+                  <div className="flex items-center gap-1.5">
+                    {isActive && (
+                      <Badge variant="success" className="animate-success-pop">Actief</Badge>
                     )}
                     <Badge variant={ENV_TYPE_BADGE_VARIANT[envType]}>
                       {ENV_TYPE_LABELS[envType]}
@@ -242,12 +280,12 @@ export function ConnectionManager() {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    variant={activeConnectionId === conn.id ? "secondary" : "default"}
-                    onClick={() => setActiveConnection(conn.id)}
-                    disabled={activeConnectionId === conn.id}
+                    variant={isActive ? "secondary" : "default"}
+                    onClick={() => handleSetActive(conn.id, conn.name)}
+                    disabled={isActive}
                   >
                     <Star className="mr-1 h-3 w-3" />
-                    {activeConnectionId === conn.id ? "Actief" : "Activeren"}
+                    {isActive ? "Actief" : "Activeren"}
                   </Button>
                   <Button
                     size="sm"
@@ -261,8 +299,8 @@ export function ConnectionManager() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-destructive"
-                    onClick={() => deleteConnection(conn.id)}
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDelete(conn.id, conn.name)}
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

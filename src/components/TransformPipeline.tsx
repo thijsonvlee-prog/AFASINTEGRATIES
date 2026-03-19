@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useTransformStore } from "@/store/transformStore"
 import { useConnectorStore } from "@/store/connectorStore"
+import { useToastStore } from "@/store/toastStore"
 import { applyTransformations } from "@/lib/transformer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +23,7 @@ import {
   Calculator,
   Filter,
   Columns,
+  Shuffle,
 } from "lucide-react"
 import type { TransformStep, RenameConfig, FormulaConfig, FilterConfig, CalculatedConfig } from "@/types"
 
@@ -31,6 +33,13 @@ const STEP_TYPES = [
   { value: "filter", label: "Rijen filteren", icon: Filter },
   { value: "calculated", label: "Berekend veld", icon: Columns },
 ] as const
+
+const STEP_COLORS: Record<string, string> = {
+  rename: "bg-violet-100 text-violet-600",
+  formula: "bg-amber-100 text-amber-600",
+  filter: "bg-sky-100 text-sky-600",
+  calculated: "bg-emerald-100 text-emerald-600",
+}
 
 function StepEditor({
   step,
@@ -85,7 +94,7 @@ function StepEditor({
                 <Button size="icon" variant="ghost" onClick={() => {
                   onUpdate({ mappings: mappings.filter((_, j) => j !== i) })
                 }}>
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3 w-3 text-destructive" />
                 </Button>
               )}
             </div>
@@ -93,7 +102,7 @@ function StepEditor({
           <Button size="sm" variant="outline" onClick={() => {
             onUpdate({ mappings: [...mappings, { from: "", to: "" }] })
           }}>
-            <Plus className="mr-1 h-3 w-3" /> Mapping toevoegen
+            <Plus className="mr-1 h-3 w-3" /> Mapping
           </Button>
         </div>
       )
@@ -206,6 +215,7 @@ function StepEditor({
 export function TransformPipeline() {
   const { steps, addStep, updateStep, removeStep, setPreviewData, previewData } = useTransformStore()
   const { connectorData } = useConnectorStore()
+  const { addToast } = useToastStore()
   const [selectedType, setSelectedType] = useState<TransformStep["type"]>("rename")
 
   const sourceFields = connectorData.length > 0 ? Object.keys(connectorData[0]) : []
@@ -229,8 +239,13 @@ export function TransformPipeline() {
         steps
       )
       setPreviewData(result)
+      addToast({
+        type: "success",
+        title: "Transformatie toegepast",
+        description: `${result.length} rijen getransformeerd`,
+      })
     } catch (error) {
-      console.error("Transform error:", error)
+      addToast({ type: "error", title: "Transformatiefout", description: String(error) })
     }
   }
 
@@ -238,15 +253,19 @@ export function TransformPipeline() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Data Transformatie</h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Transformeer data tussen GetConnector en UpdateConnector
         </p>
       </div>
 
       {connectorData.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <p>Haal eerst data op via de GetConnector Explorer</p>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 mb-4">
+              <Shuffle className="h-7 w-7 text-amber-500" />
+            </div>
+            <p className="font-semibold text-foreground">Geen brondata</p>
+            <p className="text-sm">Haal eerst data op via de GetConnector Explorer</p>
           </CardContent>
         </Card>
       )}
@@ -255,35 +274,45 @@ export function TransformPipeline() {
         <>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Brondata</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-sky-100">
+                  <Columns className="h-3.5 w-3.5 text-sky-600" />
+                </div>
+                Brondata
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-2">
-                {connectorData.length} rijen, {sourceFields.length} kolommen:
-                {" "}{sourceFields.join(", ")}
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{connectorData.length}</span> rijen,{" "}
+                <span className="font-medium text-foreground">{sourceFields.length}</span> kolommen:{" "}
+                <span className="text-xs">{sourceFields.join(", ")}</span>
               </p>
             </CardContent>
           </Card>
 
           <div className="flex items-center justify-center">
-            <ArrowDown className="h-6 w-6 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+              <ArrowDown className="h-4 w-4 text-muted-foreground" />
+            </div>
           </div>
 
           {steps.map((step, index) => {
             const StepIcon = STEP_TYPES.find((t) => t.value === step.type)?.icon || Type
+            const colorClass = STEP_COLORS[step.type] || "bg-muted text-muted-foreground"
             return (
               <React.Fragment key={step.id}>
-                <Card>
+                <Card className="animate-slide-up">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                        <StepIcon className="h-4 w-4" />
+                      <div className="flex items-center gap-2.5">
+                        <GripVertical className="h-4 w-4 text-muted-foreground/40 cursor-grab" />
+                        <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${colorClass}`}>
+                          <StepIcon className="h-3.5 w-3.5" />
+                        </div>
                         <CardTitle className="text-base">
-                          Stap {index + 1}:{" "}
-                          {STEP_TYPES.find((t) => t.value === step.type)?.label}
+                          Stap {index + 1}
                         </CardTitle>
-                        <Badge variant="secondary">{step.type}</Badge>
+                        <Badge variant="secondary" className="text-xs">{STEP_TYPES.find((t) => t.value === step.type)?.label}</Badge>
                       </div>
                       <Button size="icon" variant="ghost" onClick={() => removeStep(step.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -300,19 +329,21 @@ export function TransformPipeline() {
                   </CardContent>
                 </Card>
                 <div className="flex items-center justify-center">
-                  <ArrowDown className="h-6 w-6 text-muted-foreground" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                    <ArrowDown className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
               </React.Fragment>
             )
           })}
 
           <Card className="border-dashed">
-            <CardContent className="flex items-center gap-4 py-4">
+            <CardContent className="flex flex-col sm:flex-row items-center gap-4 py-4">
               <Select
                 value={selectedType}
                 onValueChange={(val) => setSelectedType(val as TransformStep["type"])}
               >
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -332,14 +363,21 @@ export function TransformPipeline() {
           </Card>
 
           {previewData.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Preview getransformeerde data</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <DataGrid data={previewData} />
-              </CardContent>
-            </Card>
+            <div className="animate-slide-up">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100">
+                      <Columns className="h-3.5 w-3.5 text-emerald-600" />
+                    </div>
+                    Preview getransformeerde data
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <DataGrid data={previewData} />
+                </CardContent>
+              </Card>
+            </div>
           )}
         </>
       )}
