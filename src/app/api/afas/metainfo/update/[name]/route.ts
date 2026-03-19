@@ -20,7 +20,7 @@ export async function GET(
   }
 
   try {
-    const client = new AfasClient(profile.environmentNumber, profile.token)
+    const client = new AfasClient(profile.environmentNumber, profile.token, profile.environmentType)
     const result = await client.getUpdateConnectorMeta(params.name)
     return NextResponse.json(result.data, { status: result.status })
   } catch (error) {

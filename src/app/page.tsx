@@ -10,13 +10,14 @@ import { Plug, Search, Shuffle, Upload, GitBranch, ArrowRight } from "lucide-rea
 import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
-  const { connections, activeConnectionId, fetchConnections } = useConnectionStore()
+  const { connections, activeConnectionId, fetchConnections, fetchActiveConnection } = useConnectionStore()
   const { pipelines, fetchPipelines } = usePipelineStore()
 
   useEffect(() => {
     fetchConnections()
+    fetchActiveConnection()
     fetchPipelines()
-  }, [fetchConnections, fetchPipelines])
+  }, [fetchConnections, fetchActiveConnection, fetchPipelines])
 
   const activeConnection = connections.find((c) => c.id === activeConnectionId)
 
@@ -37,8 +38,8 @@ export default function DashboardPage() {
                 Omgeving {activeConnection.environmentNumber}
               </p>
             </div>
-            <Badge variant={activeConnection.isProduction ? "destructive" : "secondary"}>
-              {activeConnection.isProduction ? "Productie" : "Test"}
+            <Badge variant={activeConnection.environmentType === "production" ? "destructive" : "secondary"}>
+              {activeConnection.environmentType === "production" ? "Productie" : activeConnection.environmentType === "accept" ? "Accept" : "Test"}
             </Badge>
           </div>
         </div>

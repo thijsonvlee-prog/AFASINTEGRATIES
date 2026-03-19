@@ -3,9 +3,11 @@ import { AfasClient } from "@/lib/afasClient"
 import { readData } from "@/lib/storage"
 import type { ConnectionProfile } from "@/types"
 
-function getProfile(connectionId: string) {
+function getProfileAndClient(connectionId: string) {
   const profiles = readData<ConnectionProfile[]>("connections", [])
-  return profiles.find((p) => p.id === connectionId)
+  const profile = profiles.find((p) => p.id === connectionId)
+  if (!profile) return null
+  return new AfasClient(profile.environmentNumber, profile.token, profile.environmentType)
 }
 
 export async function GET(
@@ -17,8 +19,8 @@ export async function GET(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const profile = getProfile(connectionId)
-  if (!profile) {
+  const client = getProfileAndClient(connectionId)
+  if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
 
@@ -29,15 +31,13 @@ export async function GET(
   const filterjson = searchParams.get("filterjson")
 
   try {
-    const client = new AfasClient(profile.environmentNumber, profile.token)
-
     let filters
     if (filterjson) {
       try {
         const parsed = JSON.parse(filterjson)
         filters = parsed.filters || []
       } catch {
-        // pass raw filterjson
+        // ignore parse errors
       }
     }
 
@@ -66,14 +66,13 @@ export async function POST(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const profile = getProfile(connectionId)
-  if (!profile) {
+  const client = getProfileAndClient(connectionId)
+  if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
 
   try {
     const body = await req.json()
-    const client = new AfasClient(profile.environmentNumber, profile.token)
     const result = await client.insertRecord(params.name, body)
     return NextResponse.json(result.data, { status: result.status })
   } catch (error) {
@@ -93,14 +92,13 @@ export async function PUT(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const profile = getProfile(connectionId)
-  if (!profile) {
+  const client = getProfileAndClient(connectionId)
+  if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
 
   try {
     const body = await req.json()
-    const client = new AfasClient(profile.environmentNumber, profile.token)
     const result = await client.updateRecord(params.name, body)
     return NextResponse.json(result.data, { status: result.status })
   } catch (error) {
@@ -120,14 +118,13 @@ export async function DELETE(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const profile = getProfile(connectionId)
-  if (!profile) {
+  const client = getProfileAndClient(connectionId)
+  if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
 
   try {
     const body = await req.json()
-    const client = new AfasClient(profile.environmentNumber, profile.token)
     const result = await client.deleteRecord(params.name, body)
     return NextResponse.json(result.data, { status: result.status })
   } catch (error) {

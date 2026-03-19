@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
-import { readData } from "@/lib/storage"
+import { readData, writeData } from "@/lib/storage"
 import type { ConnectionProfile } from "@/types"
 
 export async function POST(req: NextRequest) {
@@ -16,14 +15,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
 
-  const session = await getSession()
-  if (!session.connections) session.connections = {}
-  session.connections[connectionId] = {
-    environmentNumber: profile.environmentNumber,
-    token: profile.token,
-  }
-  session.activeConnectionId = connectionId
-  await session.save()
+  // Sla de actieve verbinding op in een apart bestand
+  writeData("active-connection", { connectionId })
 
   return NextResponse.json({ success: true, activeConnectionId: connectionId })
+}
+
+export async function GET() {
+  const data = readData<{ connectionId: string } | null>("active-connection", null)
+  return NextResponse.json({ activeConnectionId: data?.connectionId || null })
 }

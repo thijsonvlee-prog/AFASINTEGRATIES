@@ -39,7 +39,7 @@ export async function POST(
   }
 
   try {
-    const client = new AfasClient(profile.environmentNumber, profile.token)
+    const client = new AfasClient(profile.environmentNumber, profile.token, profile.environmentType)
 
     // Step 1: Get data
     addLog("info", `Data ophalen via GetConnector: ${pipeline.getConnector.name}`)

@@ -1,9 +1,11 @@
+export type EnvironmentType = "production" | "test" | "accept"
+
 export interface ConnectionProfile {
   id: string
   name: string
   environmentNumber: string
   token: string // stored server-side only
-  isProduction: boolean
+  environmentType: EnvironmentType
   createdAt: string
   updatedAt: string
 }
@@ -12,7 +14,7 @@ export interface ConnectionProfilePublic {
   id: string
   name: string
   environmentNumber: string
-  isProduction: boolean
+  environmentType: EnvironmentType
   createdAt: string
   updatedAt: string
 }

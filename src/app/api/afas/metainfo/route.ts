@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const client = new AfasClient(profile.environmentNumber, profile.token)
+    const client = new AfasClient(profile.environmentNumber, profile.token, profile.environmentType)
     const result = await client.getMetaInfo()
     return NextResponse.json(result.data, { status: result.status })
   } catch (error) {

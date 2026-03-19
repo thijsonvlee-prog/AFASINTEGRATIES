@@ -1,7 +1,7 @@
 "use client"
 
 import { create } from "zustand"
-import type { ConnectionProfilePublic } from "@/types"
+import type { ConnectionProfilePublic, EnvironmentType } from "@/types"
 
 interface ConnectionState {
   connections: ConnectionProfilePublic[]
@@ -9,11 +9,27 @@ interface ConnectionState {
   loading: boolean
   error: string | null
   fetchConnections: () => Promise<void>
-  addConnection: (data: { name: string; environmentNumber: string; token: string; isProduction: boolean }) => Promise<void>
-  updateConnection: (data: { id: string; name?: string; environmentNumber?: string; token?: string; isProduction?: boolean }) => Promise<void>
+  addConnection: (data: {
+    name: string
+    environmentNumber: string
+    token: string
+    environmentType: EnvironmentType
+  }) => Promise<void>
+  updateConnection: (data: {
+    id: string
+    name?: string
+    environmentNumber?: string
+    token?: string
+    environmentType?: EnvironmentType
+  }) => Promise<void>
   deleteConnection: (id: string) => Promise<void>
   setActiveConnection: (id: string) => Promise<void>
-  testConnection: (data: { environmentNumber: string; token: string } | { connectionId: string }) => Promise<{ success: boolean; message: string; data?: unknown }>
+  fetchActiveConnection: () => Promise<void>
+  testConnection: (
+    data:
+      | { environmentNumber: string; token: string; environmentType: EnvironmentType }
+      | { connectionId: string }
+  ) => Promise<{ success: boolean; message: string; data?: unknown }>
 }
 
 export const useConnectionStore = create<ConnectionState>((set, get) => ({
@@ -26,10 +42,25 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     set({ loading: true, error: null })
     try {
       const res = await fetch("/api/connections")
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       set({ connections: data, loading: false })
     } catch (error) {
       set({ error: "Kon verbindingen niet laden", loading: false })
+    }
+  },
+
+  fetchActiveConnection: async () => {
+    try {
+      const res = await fetch("/api/connections/activate")
+      if (res.ok) {
+        const data = await res.json()
+        if (data.activeConnectionId) {
+          set({ activeConnectionId: data.activeConnectionId })
+        }
+      }
+    } catch {
+      // silent
     }
   },
 
@@ -41,10 +72,14 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      if (!res.ok) throw new Error("Verbinding aanmaken mislukt")
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Onbekende fout" }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
       await get().fetchConnections()
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "Fout", loading: false })
+      set({ error: error instanceof Error ? error.message : "Fout bij aanmaken", loading: false })
+      throw error
     }
   },
 
@@ -99,9 +134,12 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      return await res.json()
+      const json = await res.json()
+      // Als de HTTP status niet OK is maar we toch een JSON response hebben,
+      // return de response (bevat success: false + message)
+      return json
     } catch {
-      return { success: false, message: "Verbindingstest mislukt" }
+      return { success: false, message: "Verbindingstest mislukt - netwerk fout" }
     }
   },
 }))

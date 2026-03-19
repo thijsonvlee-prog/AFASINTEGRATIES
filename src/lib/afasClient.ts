@@ -1,17 +1,37 @@
-import type { FilterRule } from "@/types"
+import type { FilterRule, EnvironmentType } from "@/types"
+
+const BASE_URLS: Record<EnvironmentType, string> = {
+  production: "rest.afas.online",
+  test: "resttest.afas.online",
+  accept: "restaccept.afas.online",
+}
+
+function encodeToken(token: string): string {
+  // AFAS verwacht: Authorization: AfasToken <base64-encoded-xml-token>
+  // Het token is XML: <token><version>1</version><data>...</data></token>
+  // Als het al base64 is (geen XML-tags), neem het direct over.
+  // Anders: base64-encode het.
+  const trimmed = token.trim()
+  if (trimmed.startsWith("<token>") || trimmed.startsWith("<Token>")) {
+    // Raw XML token — base64 encode het
+    return Buffer.from(trimmed).toString("base64")
+  }
+  // Het token is waarschijnlijk al base64-encoded, gebruik het direct
+  return trimmed
+}
 
 export class AfasClient {
   private baseUrl: string
   private authHeader: string
 
-  constructor(environmentNumber: string, token: string) {
-    this.baseUrl = `https://${environmentNumber}.rest.afas.online/profitrestservices`
-    this.authHeader = `AfasToken ${Buffer.from(token).toString("base64")}`
+  constructor(environmentNumber: string, token: string, environmentType: EnvironmentType = "production") {
+    const domain = BASE_URLS[environmentType]
+    this.baseUrl = `https://${environmentNumber}.${domain}/profitrestservices`
+    this.authHeader = `AfasToken ${encodeToken(token)}`
   }
 
   private async request(path: string, options: RequestInit = {}): Promise<{ status: number; data: unknown }> {
     const url = `${this.baseUrl}${path}`
-    const startTime = Date.now()
 
     const response = await fetch(url, {
       ...options,
@@ -22,10 +42,8 @@ export class AfasClient {
       },
     })
 
-    const duration = Date.now() - startTime
-    let data: unknown
-
     const text = await response.text()
+    let data: unknown
     try {
       data = JSON.parse(text)
     } catch {
