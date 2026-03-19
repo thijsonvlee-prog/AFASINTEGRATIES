@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   let environmentType: EnvironmentType = "production"
 
   if (body.connectionId) {
-    const profiles = readData<ConnectionProfile[]>("connections", [])
+    const profiles = await readData<ConnectionProfile[]>("connections", [])
     const profile = profiles.find((p) => p.id === body.connectionId)
     if (!profile) {
       return NextResponse.json({ error: "Connection not found" }, { status: 404 })

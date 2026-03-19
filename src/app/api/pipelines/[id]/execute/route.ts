@@ -9,13 +9,13 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const pipelines = readData<Pipeline[]>("pipelines", [])
+  const pipelines = await readData<Pipeline[]>("pipelines", [])
   const pipeline = pipelines.find((p) => p.id === params.id)
   if (!pipeline) {
     return NextResponse.json({ error: "Pipeline not found" }, { status: 404 })
   }
 
-  const profiles = readData<ConnectionProfile[]>("connections", [])
+  const profiles = await readData<ConnectionProfile[]>("connections", [])
   const profile = profiles.find((p) => p.id === pipeline.connectionId)
   if (!profile) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
@@ -135,9 +135,9 @@ export async function POST(
     addLog("info", `Klaar: ${processed} verwerkt, ${failed} mislukt`)
 
     // Save execution log
-    const executions = readData<PipelineExecution[]>("executions", [])
+    const executions = await readData<PipelineExecution[]>("executions", [])
     executions.push(execution)
-    writeData("executions", executions)
+    await writeData("executions", executions)
 
     return NextResponse.json({ execution })
   } catch (error) {
@@ -146,9 +146,9 @@ export async function POST(
     execution.completedAt = new Date().toISOString()
     addLog("error", execution.error)
 
-    const executions = readData<PipelineExecution[]>("executions", [])
+    const executions = await readData<PipelineExecution[]>("executions", [])
     executions.push(execution)
-    writeData("executions", executions)
+    await writeData("executions", executions)
 
     return NextResponse.json({ execution }, { status: 500 })
   }

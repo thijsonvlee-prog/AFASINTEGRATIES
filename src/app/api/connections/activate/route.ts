@@ -9,19 +9,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "connectionId is required" }, { status: 400 })
   }
 
-  const profiles = readData<ConnectionProfile[]>("connections", [])
+  const profiles = await readData<ConnectionProfile[]>("connections", [])
   const profile = profiles.find((p) => p.id === connectionId)
   if (!profile) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
 
   // Sla de actieve verbinding op in een apart bestand
-  writeData("active-connection", { connectionId })
+  await writeData("active-connection", { connectionId })
 
   return NextResponse.json({ success: true, activeConnectionId: connectionId })
 }
 
 export async function GET() {
-  const data = readData<{ connectionId: string } | null>("active-connection", null)
+  const data = await readData<{ connectionId: string } | null>("active-connection", null)
   return NextResponse.json({ activeConnectionId: data?.connectionId || null })
 }

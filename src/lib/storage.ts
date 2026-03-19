@@ -1,64 +1,52 @@
-import fs from "fs"
-import path from "path"
+import { put, list, del } from "@vercel/blob"
 
-function getDataDir(): string {
-  // In serverless/cloud omgevingen (Vercel, AWS Lambda) is process.cwd() read-only.
-  // /tmp is altijd schrijfbaar. Bij lokale dev werkt process.cwd()/data ook.
-  const cwdData = path.join(process.cwd(), "data")
+const BLOB_PREFIX = "afas-data/"
+
+function blobPath(name: string): string {
+  return `${BLOB_PREFIX}${name}.json`
+}
+
+export async function readData<T>(name: string, defaultValue: T): Promise<T> {
   try {
-    // Probeer eerst de project-directory (werkt lokaal)
-    if (fs.existsSync(cwdData)) {
-      // Test of we kunnen schrijven
-      fs.accessSync(cwdData, fs.constants.W_OK)
-      return cwdData
+    // Zoek het bestand in de blob store
+    const { blobs } = await list({ prefix: blobPath(name) })
+    const match = blobs.find((b) => b.pathname === blobPath(name))
+    if (!match) {
+      return defaultValue
     }
-    // Map bestaat niet — probeer aan te maken
-    fs.mkdirSync(cwdData, { recursive: true })
-    return cwdData
-  } catch {
-    // Fallback naar /tmp/afas-data (serverless/cloud)
-    const tmpData = path.join("/tmp", "afas-data")
-    if (!fs.existsSync(tmpData)) {
-      fs.mkdirSync(tmpData, { recursive: true })
+    const res = await fetch(match.url)
+    if (!res.ok) {
+      console.error(`[Storage] Blob fetch mislukt voor ${name}: ${res.status}`)
+      return defaultValue
     }
-    console.log(`[Storage] Gebruik /tmp/afas-data (${cwdData} is niet schrijfbaar)`)
-    return tmpData
-  }
-}
-
-// Cache de data directory zodat we niet elke keer opnieuw checken
-let _dataDir: string | null = null
-function getDir(): string {
-  if (!_dataDir) {
-    _dataDir = getDataDir()
-  }
-  return _dataDir
-}
-
-function getFilePath(name: string) {
-  return path.join(getDir(), `${name}.json`)
-}
-
-export function readData<T>(name: string, defaultValue: T): T {
-  const filePath = getFilePath(name)
-  if (!fs.existsSync(filePath)) {
-    return defaultValue
-  }
-  try {
-    const raw = fs.readFileSync(filePath, "utf-8")
-    return JSON.parse(raw)
+    const data = await res.json()
+    return data as T
   } catch (error) {
     console.error(`[Storage] Fout bij lezen ${name}:`, error)
     return defaultValue
   }
 }
 
-export function writeData<T>(name: string, data: T): void {
-  const filePath = getFilePath(name)
+export async function writeData<T>(name: string, data: T): Promise<void> {
+  const pathname = blobPath(name)
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8")
+    // Verwijder bestaande blob als die er is (put met zelfde pathname overschrijft niet altijd)
+    const { blobs } = await list({ prefix: pathname })
+    const existing = blobs.find((b) => b.pathname === pathname)
+    if (existing) {
+      await del(existing.url)
+    }
+
+    await put(pathname, JSON.stringify(data, null, 2), {
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: false,
+    })
+    console.log(`[Storage] ${name} opgeslagen in Vercel Blob`)
   } catch (error) {
-    console.error(`[Storage] Fout bij schrijven ${name} naar ${filePath}:`, error)
-    throw new Error(`Kan data niet opslaan: ${error instanceof Error ? error.message : String(error)}`)
+    console.error(`[Storage] Fout bij schrijven ${name}:`, error)
+    throw new Error(
+      `Kan data niet opslaan: ${error instanceof Error ? error.message : String(error)}`
+    )
   }
 }

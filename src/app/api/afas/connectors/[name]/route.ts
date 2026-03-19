@@ -3,8 +3,8 @@ import { AfasClient } from "@/lib/afasClient"
 import { readData } from "@/lib/storage"
 import type { ConnectionProfile } from "@/types"
 
-function getProfileAndClient(connectionId: string) {
-  const profiles = readData<ConnectionProfile[]>("connections", [])
+async function getProfileAndClient(connectionId: string) {
+  const profiles = await readData<ConnectionProfile[]>("connections", [])
   const profile = profiles.find((p) => p.id === connectionId)
   if (!profile) return null
   return new AfasClient(profile.environmentNumber, profile.token, profile.environmentType)
@@ -19,7 +19,7 @@ export async function GET(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const client = getProfileAndClient(connectionId)
+  const client = await getProfileAndClient(connectionId)
   if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
@@ -66,7 +66,7 @@ export async function POST(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const client = getProfileAndClient(connectionId)
+  const client = await getProfileAndClient(connectionId)
   if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
@@ -92,7 +92,7 @@ export async function PUT(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const client = getProfileAndClient(connectionId)
+  const client = await getProfileAndClient(connectionId)
   if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }
@@ -118,7 +118,7 @@ export async function DELETE(
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const client = getProfileAndClient(connectionId)
+  const client = await getProfileAndClient(connectionId)
   if (!client) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })
   }

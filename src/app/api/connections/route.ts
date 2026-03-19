@@ -10,7 +10,7 @@ function toPublic(c: ConnectionProfile): ConnectionProfilePublic {
 
 export async function GET() {
   try {
-    const profiles = readData<ConnectionProfile[]>("connections", [])
+    const profiles = await readData<ConnectionProfile[]>("connections", [])
     return NextResponse.json(profiles.map(toPublic))
   } catch (error) {
     console.error("[API /connections GET]", error)
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const validTypes: EnvironmentType[] = ["production", "test", "accept"]
     const envType: EnvironmentType = validTypes.includes(environmentType) ? environmentType : "production"
 
-    const profiles = readData<ConnectionProfile[]>("connections", [])
+    const profiles = await readData<ConnectionProfile[]>("connections", [])
     const profile: ConnectionProfile = {
       id: uuidv4(),
       name,
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     profiles.push(profile)
-    writeData("connections", profiles)
+    await writeData("connections", profiles)
 
     console.log(`[API /connections POST] Verbinding "${name}" aangemaakt (id: ${profile.id})`)
     return NextResponse.json(toPublic(profile), { status: 201 })
@@ -70,7 +70,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "ID is verplicht" }, { status: 400 })
     }
 
-    const profiles = readData<ConnectionProfile[]>("connections", [])
+    const profiles = await readData<ConnectionProfile[]>("connections", [])
     const index = profiles.findIndex((p) => p.id === id)
     if (index === -1) {
       return NextResponse.json({ error: "Verbinding niet gevonden" }, { status: 404 })
@@ -82,7 +82,7 @@ export async function PUT(req: NextRequest) {
     if (environmentType) profiles[index].environmentType = environmentType
     profiles[index].updatedAt = new Date().toISOString()
 
-    writeData("connections", profiles)
+    await writeData("connections", profiles)
 
     console.log(`[API /connections PUT] Verbinding "${profiles[index].name}" bijgewerkt`)
     return NextResponse.json(toPublic(profiles[index]))
@@ -104,14 +104,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "ID is verplicht" }, { status: 400 })
     }
 
-    const profiles = readData<ConnectionProfile[]>("connections", [])
+    const profiles = await readData<ConnectionProfile[]>("connections", [])
     const filtered = profiles.filter((p) => p.id !== id)
 
     if (filtered.length === profiles.length) {
       return NextResponse.json({ error: "Verbinding niet gevonden" }, { status: 404 })
     }
 
-    writeData("connections", filtered)
+    await writeData("connections", filtered)
 
     console.log(`[API /connections DELETE] Verbinding ${id} verwijderd`)
     return NextResponse.json({ success: true })

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "x-connection-id header is required" }, { status: 400 })
   }
 
-  const profiles = readData<ConnectionProfile[]>("connections", [])
+  const profiles = await readData<ConnectionProfile[]>("connections", [])
   const profile = profiles.find((p) => p.id === connectionId)
   if (!profile) {
     return NextResponse.json({ error: "Connection not found" }, { status: 404 })

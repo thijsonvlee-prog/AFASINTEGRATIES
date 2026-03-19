@@ -4,7 +4,7 @@ import { readData, writeData } from "@/lib/storage"
 import type { Pipeline } from "@/types"
 
 export async function GET() {
-  const pipelines = readData<Pipeline[]>("pipelines", [])
+  const pipelines = await readData<Pipeline[]>("pipelines", [])
   return NextResponse.json(pipelines)
 }
 
@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
     updatedAt: new Date().toISOString(),
   }
 
-  const pipelines = readData<Pipeline[]>("pipelines", [])
+  const pipelines = await readData<Pipeline[]>("pipelines", [])
   pipelines.push(pipeline)
-  writeData("pipelines", pipelines)
+  await writeData("pipelines", pipelines)
 
   return NextResponse.json(pipeline, { status: 201 })
 }
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 })
   }
 
-  const pipelines = readData<Pipeline[]>("pipelines", [])
+  const pipelines = await readData<Pipeline[]>("pipelines", [])
   const index = pipelines.findIndex((p) => p.id === body.id)
   if (index === -1) {
     return NextResponse.json({ error: "Pipeline not found" }, { status: 404 })
@@ -49,7 +49,7 @@ export async function PUT(req: NextRequest) {
     ...body,
     updatedAt: new Date().toISOString(),
   }
-  writeData("pipelines", pipelines)
+  await writeData("pipelines", pipelines)
 
   return NextResponse.json(pipelines[index])
 }
@@ -62,13 +62,13 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "id is required" }, { status: 400 })
   }
 
-  const pipelines = readData<Pipeline[]>("pipelines", [])
+  const pipelines = await readData<Pipeline[]>("pipelines", [])
   const filtered = pipelines.filter((p) => p.id !== id)
 
   if (filtered.length === pipelines.length) {
     return NextResponse.json({ error: "Pipeline not found" }, { status: 404 })
   }
 
-  writeData("pipelines", filtered)
+  await writeData("pipelines", filtered)
   return NextResponse.json({ success: true })
 }
