@@ -25,7 +25,7 @@ export default function RootLayout({
         <div className="flex h-screen">
           <Sidebar />
           <main className="flex-1 overflow-auto pt-14 md:pt-0 bg-background">
-            <div className="mx-auto p-4 md:p-8 max-w-7xl animate-fade-in">
+            <div className="mx-auto p-4 md:p-8 lg:p-10 max-w-7xl animate-fade-in">
               {children}
             </div>
           </main>

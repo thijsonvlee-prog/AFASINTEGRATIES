@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 225 14% 95%;
+    --background: 228 16% 94%;
     --foreground: 224 20% 10%;
     --card: 0 0% 100%;
     --card-foreground: 224 20% 10%;
@@ -28,7 +28,7 @@
     --input: 225 12% 88%;
     --ring: 245 58% 51%;
     --radius: 0.625rem;
-    --sidebar: 245 40% 14%;
+    --sidebar-bg: #07070a;
     --sidebar-foreground: 240 20% 90%;
     --sidebar-muted: 245 35% 22%;
     --sidebar-accent: 245 58% 51%;
@@ -63,12 +63,12 @@
   background: hsl(var(--muted-foreground) / 0.3);
 }
 
-/* Bento Grid utilities */
+/* Bento Grid */
 @layer utilities {
   .bento-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
   }
   .bento-span-1 { grid-column: span 1; }
   .bento-span-2 { grid-column: span 2; }
@@ -76,55 +76,56 @@
   .bento-row-2  { grid-row: span 2; }
 
   @media (max-width: 768px) {
-    .bento-grid {
-      grid-template-columns: 1fr;
-    }
-    .bento-span-1,
-    .bento-span-2,
-    .bento-span-3 {
-      grid-column: span 1;
-    }
+    .bento-grid { grid-template-columns: 1fr; }
+    .bento-span-1, .bento-span-2, .bento-span-3 { grid-column: span 1; }
   }
 
   @media (min-width: 769px) and (max-width: 1024px) {
-    .bento-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .bento-span-3 {
-      grid-column: span 2;
-    }
+    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+    .bento-span-3 { grid-column: span 2; }
   }
 }
 
 /* Glass morphism */
 @layer utilities {
   .glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
   .glass-blue {
     @apply glass;
-    background: rgba(219, 234, 254, 0.55);
+    background: rgba(219, 234, 254, 0.45);
   }
   .glass-violet {
     @apply glass;
-    background: rgba(237, 233, 254, 0.55);
+    background: rgba(237, 233, 254, 0.45);
   }
   .glass-amber {
     @apply glass;
-    background: rgba(254, 243, 199, 0.55);
+    background: rgba(254, 243, 199, 0.45);
   }
   .glass-emerald {
     @apply glass;
-    background: rgba(209, 250, 229, 0.55);
+    background: rgba(209, 250, 229, 0.45);
   }
   .glass-red {
     @apply glass;
-    background: rgba(254, 226, 226, 0.55);
+    background: rgba(254, 226, 226, 0.45);
   }
   .glass-white {
     @apply glass;
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Mesh gradient for hero */
+@layer utilities {
+  .mesh-gradient {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(139, 92, 246, 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 70%, rgba(99, 102, 241, 0.25) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 50% at 50% 20%, rgba(168, 85, 247, 0.20) 0%, transparent 50%),
+      linear-gradient(135deg, #312e81 0%, #4338ca 30%, #6366f1 55%, #4f46e5 75%, #3730a3 100%);
   }
 }
 
@@ -162,29 +163,20 @@
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(100%) scale(0.95); }
 }
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px -6px currentColor; }
+  50% { box-shadow: 0 0 30px -4px currentColor; }
+}
 
 @layer utilities {
-  .animate-slide-up {
-    animation: slideUp 0.35s ease-out;
-  }
-  .animate-slide-down {
-    animation: slideDown 0.3s ease-out;
-  }
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-  .animate-scale-in {
-    animation: scaleIn 0.25s ease-out;
-  }
-  .animate-success-pop {
-    animation: success-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .animate-toast-enter {
-    animation: toast-enter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
-  }
-  .animate-toast-exit {
-    animation: toast-exit 0.25s ease-in forwards;
-  }
+  .animate-slide-up { animation: slideUp 0.35s ease-out; }
+  .animate-slide-down { animation: slideDown 0.3s ease-out; }
+  .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+  .animate-scale-in { animation: scaleIn 0.25s ease-out; }
+  .animate-success-pop { animation: success-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .animate-toast-enter { animation: toast-enter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1) forwards; }
+  .animate-toast-exit { animation: toast-exit 0.25s ease-in forwards; }
+  .animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
   .skeleton {
     background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 75%);
     background-size: 200% 100%;

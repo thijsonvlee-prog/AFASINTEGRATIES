@@ -67,19 +67,19 @@ export function PipelineManager() {
   }
 
   const toggleExpand = async (id: string) => {
-    if (expandedPipeline === id) { setExpandedPipeline(null) }
+    if (expandedPipeline === id) setExpandedPipeline(null)
     else { setExpandedPipeline(id); await fetchExecutionLog(id) }
   }
 
   const getConnectionName = (connId: string) => connections.find((c) => c.id === connId)?.name || connId
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <BentoLabel>Automatisering</BentoLabel>
-          <h2 className="text-2xl font-extrabold tracking-tight mt-1">Pipelines</h2>
-          <p className="text-slate-400 text-sm">Herbruikbare workflows: Get → Transformatie → Update</p>
+          <h2 className="text-3xl font-extrabold tracking-tighter mt-1">Pipelines</h2>
+          <p className="text-slate-400 text-sm font-medium">Herbruikbare workflows: Get → Transformatie → Update</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -95,9 +95,9 @@ export function PipelineManager() {
               <div className="space-y-2"><Label>Beschrijving</Label><Input placeholder="Optionele beschrijving..." value={pipelineDesc} onChange={(e) => setPipelineDesc(e.target.value)} /></div>
               <div className="space-y-2"><Label>UpdateConnector naam</Label><Input placeholder="Connector naam" value={updateConnectorName} onChange={(e) => setUpdateConnectorName(e.target.value)} /></div>
               <div className="rounded-2xl glass-violet p-4 text-sm space-y-1.5">
-                <p><span className="font-bold">GetConnector:</span> {selectedGetConnector}</p>
-                <p><span className="font-bold">Transformatiestappen:</span> <span className="font-mono">{steps.length}</span></p>
-                <p><span className="font-bold">Field mappings:</span> <span className="font-mono">{fieldMappings.length}</span></p>
+                <p><span className="font-extrabold">GetConnector:</span> {selectedGetConnector}</p>
+                <p><span className="font-extrabold">Stappen:</span> <span className="font-mono tabular-nums">{steps.length}</span></p>
+                <p><span className="font-extrabold">Mappings:</span> <span className="font-mono tabular-nums">{fieldMappings.length}</span></p>
               </div>
             </div>
             <DialogFooter><Button onClick={handleCreate} disabled={!pipelineName}>Opslaan</Button></DialogFooter>
@@ -105,53 +105,49 @@ export function PipelineManager() {
         </Dialog>
       </div>
 
-      {/* Stats */}
       {pipelines.length > 0 && (
         <BentoGrid>
-          <BentoCard span={1}>
+          <BentoCard span={1} index={0}>
             <BentoLabel>Totaal</BentoLabel>
-            <div className="mt-1"><BentoValue mono>{pipelines.length}</BentoValue></div>
+            <div className="mt-2"><BentoValue mono size="large">{pipelines.length}</BentoValue></div>
           </BentoCard>
-          <BentoCard span={2} glass="blue">
+          <BentoCard span={2} glass="blue" index={1}>
             <BentoLabel>Overzicht</BentoLabel>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {pipelines.slice(0, 6).map((p) => (
-                <Badge key={p.id} variant="secondary" className="font-mono text-xs">{p.name}</Badge>
-              ))}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {pipelines.slice(0, 6).map((p) => <Badge key={p.id} variant="secondary" className="font-mono text-xs">{p.name}</Badge>)}
             </div>
           </BentoCard>
         </BentoGrid>
       )}
 
       {pipelines.length === 0 && (
-        <BentoCard className="flex flex-col items-center justify-center py-16 border-dashed border-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 mb-4">
-            <GitBranch className="h-7 w-7 text-emerald-500" />
+        <BentoCard index={0} className="flex flex-col items-center justify-center py-20 border-dashed border-2">
+          <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-emerald-50 mb-5">
+            <GitBranch className="h-9 w-9 text-emerald-400" />
           </div>
-          <p className="text-lg font-extrabold">Nog geen pipelines</p>
-          <p className="text-sm text-slate-400 text-center max-w-xs">Configureer een GetConnector, transformatie en UpdateConnector om een pipeline te maken</p>
+          <p className="text-xl font-extrabold tracking-tight">Nog geen pipelines</p>
+          <p className="text-sm text-slate-400 text-center max-w-xs font-medium">Configureer een GetConnector, transformatie en UpdateConnector om een pipeline te maken</p>
         </BentoCard>
       )}
 
-      {/* Pipeline cards */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         {pipelines.map((pipeline, i) => (
           <motion.div
             key={pipeline.id}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...bentoSpring, delay: i * 0.04 }}
+            transition={{ ...bentoSpring, delay: i * 0.06 }}
           >
-            <BentoCard span={1} className="bento-span-3">
-              <div className="flex items-center justify-between mb-3">
+            <BentoCard span={1} index={0} className="bento-span-3" hoverGlow="emerald">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="font-extrabold text-base">{pipeline.name}</p>
-                  {pipeline.description && <p className="text-xs text-slate-400 mt-0.5">{pipeline.description}</p>}
+                  <p className="font-extrabold text-lg tracking-tight">{pipeline.name}</p>
+                  {pipeline.description && <p className="text-xs text-slate-400 mt-0.5 font-medium">{pipeline.description}</p>}
                 </div>
-                <Badge variant="outline" className="font-mono text-xs">{getConnectionName(pipeline.connectionId)}</Badge>
+                <Badge variant="outline" className="font-mono text-[10px]">{getConnectionName(pipeline.connectionId)}</Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1.5 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-5">
                 <Badge variant="info" className="text-xs font-mono">{pipeline.getConnector.name}</Badge>
                 <ArrowRight className="h-3 w-3 text-slate-300 hidden sm:block" />
                 <Badge variant="secondary" className="text-xs"><span className="font-mono">{pipeline.transformSteps.length}</span> stappen</Badge>
@@ -164,8 +160,7 @@ export function PipelineManager() {
                   <Eye className="mr-1 h-3 w-3" /> Dry Run
                 </Button>
                 <Button size="sm" onClick={() => handleExecute(pipeline.id, pipeline.name)} disabled={executingId === pipeline.id}>
-                  {executingId === pipeline.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Play className="mr-1 h-3 w-3" />}
-                  Uitvoeren
+                  {executingId === pipeline.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Play className="mr-1 h-3 w-3" />}Uitvoeren
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => toggleExpand(pipeline.id)}>
                   {expandedPipeline === pipeline.id ? <ChevronUp className="mr-1 h-3 w-3" /> : <ChevronDown className="mr-1 h-3 w-3" />}Log
@@ -177,30 +172,24 @@ export function PipelineManager() {
               </div>
 
               {lastResult && lastResult.pipelineId === pipeline.id && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={bentoSpring}
-                  className={`mt-4 rounded-2xl p-4 text-sm ${lastResult.execution.status === "success" ? "glass-emerald text-emerald-800" : "glass-red text-red-800"}`}
-                >
-                  <div className="flex items-center gap-2 font-bold mb-1">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={bentoSpring}
+                  className={`mt-5 rounded-2xl p-4 text-sm ${lastResult.execution.status === "success" ? "glass-emerald text-emerald-800" : "glass-red text-red-800"}`}>
+                  <div className="flex items-center gap-2 font-extrabold mb-1">
                     {lastResult.execution.status === "success" ? <CheckCircle className="h-4 w-4 text-emerald-500 animate-success-pop" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                    <span className="font-mono">{lastResult.execution.recordsProcessed}</span> verwerkt,{" "}
-                    <span className="font-mono">{lastResult.execution.recordsFailed}</span> mislukt
+                    <span className="font-mono tabular-nums">{lastResult.execution.recordsProcessed}</span> verwerkt,{" "}
+                    <span className="font-mono tabular-nums">{lastResult.execution.recordsFailed}</span> mislukt
                   </div>
                   {lastResult.preview && (
-                    <pre className="mt-2 rounded-xl bg-white/50 p-2 text-xs overflow-auto max-h-[200px] font-mono">{JSON.stringify(lastResult.preview, null, 2)}</pre>
+                    <pre className="mt-3 rounded-xl bg-white/50 p-3 text-xs overflow-auto max-h-[200px] font-mono">{JSON.stringify(lastResult.preview, null, 2)}</pre>
                   )}
                 </motion.div>
               )}
 
               {expandedPipeline === pipeline.id && executions[pipeline.id] && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={bentoSpring} className="mt-4 space-y-2">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Uitvoerlog</span>
-                  {executions[pipeline.id].length === 0 && <p className="text-sm text-slate-400">Nog niet uitgevoerd</p>}
-                  {executions[pipeline.id].map((exec) => (
-                    <ExecutionEntry key={exec.id} execution={exec} />
-                  ))}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={bentoSpring} className="mt-5 space-y-2">
+                  <BentoLabel>Uitvoerlog</BentoLabel>
+                  {executions[pipeline.id].length === 0 && <p className="text-sm text-slate-400 font-medium">Nog niet uitgevoerd</p>}
+                  {executions[pipeline.id].map((exec) => <ExecutionEntry key={exec.id} execution={exec} />)}
                 </motion.div>
               )}
             </BentoCard>
@@ -214,11 +203,11 @@ export function PipelineManager() {
 function ExecutionEntry({ execution }: { execution: PipelineExecution }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="rounded-2xl border border-white/20 bg-white p-3 text-sm shadow-soft">
+    <div className="rounded-2xl border border-white/20 bg-white/80 backdrop-blur-xl p-3 text-sm shadow-soft">
       <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-2">
           {execution.status === "success" ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : execution.status === "error" ? <XCircle className="h-3.5 w-3.5 text-red-500" /> : <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />}
-          <span className="font-bold text-xs">{new Date(execution.startedAt).toLocaleString("nl-NL")}</span>
+          <span className="font-extrabold text-xs">{new Date(execution.startedAt).toLocaleString("nl-NL")}</span>
           <Badge variant={execution.status === "success" ? "success" : "destructive"} className="text-[10px]">{execution.status}</Badge>
         </div>
         <span className="text-[10px] text-slate-400 font-mono tabular-nums">{execution.recordsProcessed} verwerkt, {execution.recordsFailed} mislukt</span>

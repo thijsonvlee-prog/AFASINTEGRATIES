@@ -13,13 +13,16 @@ export function ApiLogViewer() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   return (
-    <BentoCard>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100">
-            <Terminal className="h-4 w-4 text-slate-500" />
+    <BentoCard index={0}>
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50">
+            <Terminal className="h-5 w-5 text-slate-500" />
           </div>
-          <span className="font-bold text-sm">API Log</span>
+          <div>
+            <span className="font-extrabold text-sm tracking-tight block">API Log</span>
+            <span className="text-[10px] text-slate-400 font-mono tabular-nums">{logs.length} calls</span>
+          </div>
         </div>
         <Button size="sm" variant="ghost" onClick={clearLogs} className="text-xs">
           <Trash2 className="mr-1 h-3 w-3" /> Wissen
@@ -27,41 +30,50 @@ export function ApiLogViewer() {
       </div>
 
       {logs.length === 0 && (
-        <p className="text-sm text-slate-400 py-4 text-center">Nog geen API-calls gelogd</p>
+        <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-50 mb-4"><Terminal className="h-7 w-7 opacity-40" /></div>
+          <p className="font-extrabold tracking-tight">Nog geen API-calls gelogd</p>
+        </div>
       )}
 
-      <div className="space-y-1.5 max-h-[400px] overflow-auto">
-        {logs.map((log) => (
-          <div key={log.id} className="rounded-2xl border border-white/20 bg-white text-sm overflow-hidden shadow-soft">
+      <div className="space-y-2 max-h-[400px] overflow-auto">
+        {logs.map((log, i) => (
+          <motion.div
+            key={log.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...bentoSpring, delay: i * 0.03 }}
+            className="rounded-2xl border border-white/20 bg-white/80 backdrop-blur-xl text-sm overflow-hidden shadow-soft"
+          >
             <div
-              className="flex items-center justify-between p-2.5 cursor-pointer hover:bg-slate-50/60 transition-colors"
+              className="flex items-center justify-between p-3.5 cursor-pointer hover:bg-slate-50/60 transition-colors"
               onClick={() => setExpandedId(expandedId === log.id ? null : log.id)}
             >
               <div className="flex items-center gap-2">
                 <Badge variant={log.responseStatus < 300 ? "success" : "destructive"} className="text-[10px] font-mono px-1.5">{log.responseStatus}</Badge>
-                <span className="font-mono text-xs font-bold">{log.method}</span>
-                <span className="text-xs text-slate-400 truncate max-w-[200px] md:max-w-[300px]">{log.url}</span>
+                <span className="font-mono text-xs font-extrabold">{log.method}</span>
+                <span className="text-xs text-slate-400 truncate max-w-[200px] md:max-w-[300px] font-medium">{log.url}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-slate-400 font-mono tabular-nums">{log.duration}ms</span>
                 {expandedId === log.id ? <ChevronUp className="h-3 w-3 text-slate-300" /> : <ChevronDown className="h-3 w-3 text-slate-300" />}
               </div>
             </div>
-            {expandedId === log.id && (
-              <div className="border-t p-3 space-y-3 bg-slate-50/40 animate-slide-down">
+            {expandedId === log.id ? (
+              <div className="border-t border-border/20 p-4 space-y-4 bg-slate-50/30">
                 {log.requestBody ? (
                   <div>
                     <BentoLabel>Request</BentoLabel>
-                    <pre className="text-xs bg-white rounded-xl p-3 overflow-auto max-h-[200px] font-mono border border-white/20 mt-1">{JSON.stringify(log.requestBody, null, 2)}</pre>
+                    <pre className="text-xs bg-white/60 backdrop-blur-sm rounded-2xl p-3.5 overflow-auto max-h-[200px] font-mono border border-white/20 mt-1.5">{JSON.stringify(log.requestBody, null, 2)}</pre>
                   </div>
                 ) : null}
                 <div>
                   <BentoLabel>Response</BentoLabel>
-                  <pre className="text-xs bg-white rounded-xl p-3 overflow-auto max-h-[200px] font-mono border border-white/20 mt-1">{JSON.stringify(log.responseBody, null, 2)}</pre>
+                  <pre className="text-xs bg-white/60 backdrop-blur-sm rounded-2xl p-3.5 overflow-auto max-h-[200px] font-mono border border-white/20 mt-1.5">{JSON.stringify(log.responseBody, null, 2)}</pre>
                 </div>
               </div>
-            )}
-          </div>
+            ) : null}
+          </motion.div>
         ))}
       </div>
     </BentoCard>

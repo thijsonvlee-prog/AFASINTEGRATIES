@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { useConnectionStore } from "@/store/connectionStore"
 import { useToastStore } from "@/store/toastStore"
 import { BentoCard, BentoGrid, BentoLabel, BentoValue, bentoSpring } from "@/components/ui/bento-card"
@@ -14,16 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Plus, Trash2, CheckCircle, XCircle, Loader2, Plug, Star, Zap } from "lucide-react"
 import type { EnvironmentType } from "@/types"
 
-const ENV_TYPE_LABELS: Record<EnvironmentType, string> = {
-  production: "Productie",
-  test: "Test",
-  accept: "Accept",
-}
-const ENV_TYPE_BADGE_VARIANT: Record<EnvironmentType, "destructive" | "info" | "warning"> = {
-  production: "destructive",
-  test: "info",
-  accept: "warning",
-}
+const ENV_TYPE_LABELS: Record<EnvironmentType, string> = { production: "Productie", test: "Test", accept: "Accept" }
+const ENV_TYPE_BADGE_VARIANT: Record<EnvironmentType, "destructive" | "info" | "warning"> = { production: "destructive", test: "info", accept: "warning" }
 
 export function ConnectionManager() {
   const {
@@ -41,17 +32,12 @@ export function ConnectionManager() {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
   const [testing, setTesting] = useState(false)
 
-  useEffect(() => {
-    fetchConnections()
-    fetchActiveConnection()
-  }, [fetchConnections, fetchActiveConnection])
+  useEffect(() => { fetchConnections(); fetchActiveConnection() }, [fetchConnections, fetchActiveConnection])
 
   const handleTest = async () => {
-    setTesting(true)
-    setTestResult(null)
+    setTesting(true); setTestResult(null)
     const result = await testConnection({ environmentNumber: envNumber, token, environmentType })
-    setTestResult(result)
-    setTesting(false)
+    setTestResult(result); setTesting(false)
     addToast({ type: result.success ? "success" : "error", title: result.success ? "Verbinding geslaagd" : "Verbinding mislukt", description: result.message })
   }
 
@@ -61,8 +47,7 @@ export function ConnectionManager() {
       setName(""); setEnvNumber(""); setToken(""); setEnvironmentType("test"); setTestResult(null); setDialogOpen(false)
       addToast({ type: "success", title: "Verbinding opgeslagen", description: `"${name}" is toegevoegd` })
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Onbekende fout"
-      addToast({ type: "error", title: "Fout bij opslaan", description: message, duration: 8000 })
+      addToast({ type: "error", title: "Fout bij opslaan", description: error instanceof Error ? error.message : "Onbekende fout", duration: 8000 })
     }
   }
 
@@ -77,22 +62,19 @@ export function ConnectionManager() {
   }
 
   const handleTestExisting = async (connectionId: string) => {
-    setTesting(true)
-    setTestResult(null)
+    setTesting(true); setTestResult(null)
     const result = await testConnection({ connectionId })
-    setTestResult(result)
-    setTesting(false)
+    setTestResult(result); setTesting(false)
     addToast({ type: result.success ? "success" : "error", title: result.success ? "Verbinding OK" : "Verbinding mislukt", description: result.message })
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <BentoLabel>Beheer</BentoLabel>
-          <h2 className="text-2xl font-extrabold tracking-tight mt-1">Verbindingen</h2>
-          <p className="text-slate-400 text-sm">Beheer je AFAS Profit omgevingen</p>
+          <h2 className="text-3xl font-extrabold tracking-tighter mt-1">Verbindingen</h2>
+          <p className="text-slate-400 text-sm font-medium">Beheer je AFAS Profit omgevingen</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -104,42 +86,35 @@ export function ConnectionManager() {
               <DialogDescription>Voer de gegevens in van je AFAS Profit omgeving</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Naam</Label>
-                <Input id="name" placeholder="Bijv. Mijn bedrijf - Test" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
+              <div className="space-y-2"><Label htmlFor="name">Naam</Label><Input id="name" placeholder="Bijv. Mijn bedrijf - Test" value={name} onChange={(e) => setName(e.target.value)} /></div>
               <div className="space-y-2">
                 <Label htmlFor="env">Omgevingsnummer</Label>
                 <Input id="env" placeholder="Bijv. 12345" value={envNumber} onChange={(e) => setEnvNumber(e.target.value)} />
-                <p className="text-xs text-slate-400">Alleen de cijfers (bijv. O12345AA → 12345)</p>
+                <p className="text-[10px] text-slate-400 font-medium">Alleen de cijfers (bijv. O12345AA → 12345)</p>
               </div>
               <div className="space-y-2">
                 <Label>Omgevingstype</Label>
                 <Select value={environmentType} onValueChange={(val) => setEnvironmentType(val as EnvironmentType)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="test">Test (resttest.afas.online)</SelectItem>
-                    <SelectItem value="accept">Accept (restaccept.afas.online)</SelectItem>
-                    <SelectItem value="production">Productie (rest.afas.online)</SelectItem>
+                    <SelectItem value="test">Test</SelectItem><SelectItem value="accept">Accept</SelectItem><SelectItem value="production">Productie</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="token">App Connector Token</Label>
                 <Input id="token" type="password" placeholder="<token>...</token>" value={token} onChange={(e) => setToken(e.target.value)} />
-                <p className="text-xs text-slate-400">Plak het XML-token of het base64-encoded token.</p>
               </div>
               {testResult && (
                 <div className={`flex items-center gap-3 rounded-2xl p-3.5 text-sm animate-scale-in ${testResult.success ? "glass-emerald text-emerald-800" : "glass-red text-red-800"}`}>
                   {testResult.success ? <CheckCircle className="h-4 w-4 text-emerald-500 animate-success-pop" /> : <XCircle className="h-4 w-4 text-red-500" />}
-                  <span className="font-semibold">{testResult.message}</span>
+                  <span className="font-bold">{testResult.message}</span>
                 </div>
               )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={handleTest} disabled={!envNumber || !token || testing}>
-                {testing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plug className="mr-2 h-4 w-4" />}
-                Test verbinding
+                {testing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plug className="mr-2 h-4 w-4" />}Test
               </Button>
               <Button onClick={handleAdd} disabled={!name || !envNumber || !token}>Opslaan</Button>
             </DialogFooter>
@@ -147,54 +122,44 @@ export function ConnectionManager() {
         </Dialog>
       </div>
 
-      {/* Loading */}
       {loading && connections.length === 0 && (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
-        </div>
+        <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary/40" /></div>
       )}
 
-      {/* Empty state */}
       {connections.length === 0 && !loading && (
-        <BentoCard span={1} className="flex flex-col items-center justify-center py-16 border-dashed border-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-100 mb-4">
-            <Zap className="h-7 w-7 text-violet-500" />
+        <BentoCard index={0} className="flex flex-col items-center justify-center py-20 border-dashed border-2">
+          <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-violet-50 mb-5">
+            <Zap className="h-9 w-9 text-violet-400" />
           </div>
-          <p className="text-lg font-extrabold">Nog geen verbindingen</p>
-          <p className="text-sm text-slate-400 mb-5 text-center max-w-xs">Maak je eerste verbinding aan om te starten</p>
+          <p className="text-xl font-extrabold tracking-tight">Nog geen verbindingen</p>
+          <p className="text-sm text-slate-400 mb-6 text-center max-w-xs font-medium">Maak je eerste verbinding aan om te starten</p>
           <Button onClick={() => setDialogOpen(true)}><Plus className="mr-2 h-4 w-4" /> Eerste verbinding</Button>
         </BentoCard>
       )}
 
-      {/* Stats */}
       {connections.length > 0 && (
         <BentoGrid>
-          <BentoCard span={1}>
+          <BentoCard span={1} index={0}>
             <BentoLabel>Totaal</BentoLabel>
-            <div className="mt-1"><BentoValue mono>{connections.length}</BentoValue></div>
+            <div className="mt-2"><BentoValue mono size="large">{connections.length}</BentoValue></div>
           </BentoCard>
-          <BentoCard span={1} glass={activeConnectionId ? "emerald" : undefined}>
+          <BentoCard span={1} glass={activeConnectionId ? "emerald" : undefined} index={1}>
             <BentoLabel>Actief</BentoLabel>
-            <div className="mt-1">
-              <span className="text-2xl font-extrabold">
-                {connections.find((c) => c.id === activeConnectionId)?.name || "Geen"}
-              </span>
-            </div>
+            <div className="mt-2"><span className="text-3xl font-extrabold tracking-tighter">{connections.find((c) => c.id === activeConnectionId)?.name || "Geen"}</span></div>
           </BentoCard>
-          <BentoCard span={1}>
+          <BentoCard span={1} index={2}>
             <BentoLabel>Omgevingen</BentoLabel>
-            <div className="mt-1 flex gap-2 flex-wrap">
-              {["production", "test", "accept"].map((t) => {
+            <div className="mt-3 flex gap-2 flex-wrap">
+              {(["production", "test", "accept"] as const).map((t) => {
                 const count = connections.filter((c) => c.environmentType === t).length
                 if (count === 0) return null
-                return <Badge key={t} variant={ENV_TYPE_BADGE_VARIANT[t as EnvironmentType]}>{ENV_TYPE_LABELS[t as EnvironmentType]} ({count})</Badge>
+                return <Badge key={t} variant={ENV_TYPE_BADGE_VARIANT[t]}>{ENV_TYPE_LABELS[t]} ({count})</Badge>
               })}
             </div>
           </BentoCard>
         </BentoGrid>
       )}
 
-      {/* Connection cards */}
       <BentoGrid>
         {connections.map((conn, i) => {
           const envType = conn.environmentType || "production"
@@ -203,17 +168,19 @@ export function ConnectionManager() {
             <BentoCard
               key={conn.id}
               span={1}
+              index={i}
               glass={isActive ? "violet" : undefined}
-              className={isActive ? "ring-2 ring-primary/30" : ""}
+              hoverGlow={isActive ? "violet" : undefined}
+              className={isActive ? "ring-2 ring-primary/20" : ""}
             >
-              <div className="flex items-center justify-between mb-3">
-                <p className="font-extrabold text-base truncate">{conn.name}</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="font-extrabold text-base tracking-tight truncate">{conn.name}</p>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {isActive && <Badge variant="success" className="animate-success-pop">Actief</Badge>}
                   <Badge variant={ENV_TYPE_BADGE_VARIANT[envType]}>{ENV_TYPE_LABELS[envType]}</Badge>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 mb-4 font-mono">Omgeving: {conn.environmentNumber}</p>
+              <p className="text-[11px] text-slate-400 mb-5 font-mono">Omgeving: {conn.environmentNumber}</p>
               <div className="flex gap-2">
                 <Button size="sm" variant={isActive ? "secondary" : "default"} onClick={() => handleSetActive(conn.id, conn.name)} disabled={isActive}>
                   <Star className="mr-1 h-3 w-3" />{isActive ? "Actief" : "Activeren"}

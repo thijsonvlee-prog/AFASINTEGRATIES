@@ -24,10 +24,10 @@ const STEP_TYPES = [
 ] as const
 
 const STEP_COLORS: Record<string, string> = {
-  rename: "bg-violet-100 text-violet-600",
-  formula: "bg-amber-100 text-amber-600",
-  filter: "bg-sky-100 text-sky-600",
-  calculated: "bg-emerald-100 text-emerald-600",
+  rename: "bg-violet-50 text-violet-500",
+  formula: "bg-amber-50 text-amber-500",
+  filter: "bg-sky-50 text-sky-500",
+  calculated: "bg-emerald-50 text-emerald-500",
 }
 
 const STEP_GLASS: Record<string, string> = {
@@ -37,22 +37,22 @@ const STEP_GLASS: Record<string, string> = {
   calculated: "glass-emerald",
 }
 
-function StepEditor({ step, fields, onUpdate, onRemove }: { step: TransformStep; fields: string[]; onUpdate: (config: TransformStep["config"]) => void; onRemove: () => void }) {
+function StepEditor({ step, fields, onUpdate }: { step: TransformStep; fields: string[]; onUpdate: (config: TransformStep["config"]) => void; onRemove: () => void }) {
   const config = step.config
   switch (step.type) {
     case "rename": {
-      const renameConfig = config as RenameConfig
-      const mappings = renameConfig.mappings || [{ from: "", to: "" }]
+      const rc = config as RenameConfig
+      const mappings = rc.mappings || [{ from: "", to: "" }]
       return (
         <div className="space-y-2">
           {mappings.map((m, i) => (
             <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2">
               <Select value={m.from} onValueChange={(val) => { const u = [...mappings]; u[i] = { ...u[i], from: val }; onUpdate({ mappings: u }) }}>
-                <SelectTrigger className="w-full sm:w-[160px] rounded-xl"><SelectValue placeholder="Van veld" /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[160px] rounded-2xl"><SelectValue placeholder="Van veld" /></SelectTrigger>
                 <SelectContent>{fields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
               </Select>
               <ArrowRight className="h-4 w-4 text-slate-300 hidden sm:block" />
-              <Input className="w-full sm:w-[160px] rounded-xl" placeholder="Nieuwe naam" value={m.to} onChange={(e) => { const u = [...mappings]; u[i] = { ...u[i], to: e.target.value }; onUpdate({ mappings: u }) }} />
+              <Input className="w-full sm:w-[160px] rounded-2xl" placeholder="Nieuwe naam" value={m.to} onChange={(e) => { const u = [...mappings]; u[i] = { ...u[i], to: e.target.value }; onUpdate({ mappings: u }) }} />
               {mappings.length > 1 && <Button size="icon" variant="ghost" onClick={() => onUpdate({ mappings: mappings.filter((_, j) => j !== i) })}><Trash2 className="h-3 w-3 text-destructive" /></Button>}
             </div>
           ))}
@@ -64,16 +64,11 @@ function StepEditor({ step, fields, onUpdate, onRemove }: { step: TransformStep;
       const fc = config as FormulaConfig
       return (
         <div className="flex flex-col sm:flex-row gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-slate-400">Veld</Label>
-            <Select value={fc.field || ""} onValueChange={(val) => onUpdate({ ...fc, field: val })}>
-              <SelectTrigger className="w-full sm:w-[160px] rounded-xl"><SelectValue placeholder="Veld" /></SelectTrigger>
-              <SelectContent>{fields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
-            </Select>
+          <div className="space-y-1"><Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">Veld</Label>
+            <Select value={fc.field || ""} onValueChange={(val) => onUpdate({ ...fc, field: val })}><SelectTrigger className="w-full sm:w-[160px] rounded-2xl"><SelectValue placeholder="Veld" /></SelectTrigger><SelectContent>{fields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
           </div>
-          <div className="space-y-1 flex-1">
-            <Label className="text-[10px] uppercase tracking-wider text-slate-400">Formule</Label>
-            <Input className="rounded-xl" placeholder="bijv. value * 1.21" value={fc.expression || ""} onChange={(e) => onUpdate({ ...fc, expression: e.target.value })} />
+          <div className="space-y-1 flex-1"><Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">Formule</Label>
+            <Input className="rounded-2xl" placeholder="bijv. value * 1.21" value={fc.expression || ""} onChange={(e) => onUpdate({ ...fc, expression: e.target.value })} />
           </div>
         </div>
       )
@@ -82,23 +77,11 @@ function StepEditor({ step, fields, onUpdate, onRemove }: { step: TransformStep;
       const fc = config as FilterConfig
       return (
         <div className="flex flex-col sm:flex-row gap-2">
-          <Select value={fc.field || ""} onValueChange={(val) => onUpdate({ ...fc, field: val })}>
-            <SelectTrigger className="w-full sm:w-[160px] rounded-xl"><SelectValue placeholder="Veld" /></SelectTrigger>
-            <SelectContent>{fields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
+          <Select value={fc.field || ""} onValueChange={(val) => onUpdate({ ...fc, field: val })}><SelectTrigger className="w-full sm:w-[160px] rounded-2xl"><SelectValue placeholder="Veld" /></SelectTrigger><SelectContent>{fields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent></Select>
+          <Select value={fc.operator || "equals"} onValueChange={(val) => onUpdate({ ...fc, operator: val })}><SelectTrigger className="w-full sm:w-[160px] rounded-2xl"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="equals">Gelijk aan</SelectItem><SelectItem value="not_equals">Niet gelijk aan</SelectItem><SelectItem value="greater_than">Groter dan</SelectItem><SelectItem value="less_than">Kleiner dan</SelectItem><SelectItem value="contains">Bevat</SelectItem><SelectItem value="not_empty">Niet leeg</SelectItem><SelectItem value="empty">Leeg</SelectItem></SelectContent>
           </Select>
-          <Select value={fc.operator || "equals"} onValueChange={(val) => onUpdate({ ...fc, operator: val })}>
-            <SelectTrigger className="w-full sm:w-[160px] rounded-xl"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="equals">Gelijk aan</SelectItem>
-              <SelectItem value="not_equals">Niet gelijk aan</SelectItem>
-              <SelectItem value="greater_than">Groter dan</SelectItem>
-              <SelectItem value="less_than">Kleiner dan</SelectItem>
-              <SelectItem value="contains">Bevat</SelectItem>
-              <SelectItem value="not_empty">Niet leeg</SelectItem>
-              <SelectItem value="empty">Leeg</SelectItem>
-            </SelectContent>
-          </Select>
-          <Input className="flex-1 rounded-xl" placeholder="Waarde" value={fc.value || ""} onChange={(e) => onUpdate({ ...fc, value: e.target.value })} />
+          <Input className="flex-1 rounded-2xl" placeholder="Waarde" value={fc.value || ""} onChange={(e) => onUpdate({ ...fc, value: e.target.value })} />
         </div>
       )
     }
@@ -106,13 +89,11 @@ function StepEditor({ step, fields, onUpdate, onRemove }: { step: TransformStep;
       const cc = config as CalculatedConfig
       return (
         <div className="flex flex-col sm:flex-row gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px] uppercase tracking-wider text-slate-400">Nieuw veld</Label>
-            <Input className="w-full sm:w-[160px] rounded-xl" placeholder="Veldnaam" value={cc.newField || ""} onChange={(e) => onUpdate({ ...cc, newField: e.target.value })} />
+          <div className="space-y-1"><Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">Nieuw veld</Label>
+            <Input className="w-full sm:w-[160px] rounded-2xl" placeholder="Veldnaam" value={cc.newField || ""} onChange={(e) => onUpdate({ ...cc, newField: e.target.value })} />
           </div>
-          <div className="space-y-1 flex-1">
-            <Label className="text-[10px] uppercase tracking-wider text-slate-400">Formule</Label>
-            <Input className="rounded-xl" placeholder="bijv. row.aantal * row.prijs" value={cc.expression || ""} onChange={(e) => onUpdate({ ...cc, expression: e.target.value })} />
+          <div className="space-y-1 flex-1"><Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">Formule</Label>
+            <Input className="rounded-2xl" placeholder="bijv. row.aantal * row.prijs" value={cc.expression || ""} onChange={(e) => onUpdate({ ...cc, expression: e.target.value })} />
           </div>
         </div>
       )
@@ -129,12 +110,12 @@ export function TransformPipeline() {
   const sourceFields = connectorData.length > 0 ? Object.keys(connectorData[0]) : []
 
   const handleAddStep = () => {
-    const defaultConfigs: Record<string, TransformStep["config"]> = {
+    const configs: Record<string, TransformStep["config"]> = {
       rename: { mappings: [{ from: "", to: "" }] }, formula: { field: "", expression: "" },
       filter: { field: "", operator: "equals", value: "" }, calculated: { newField: "", expression: "" },
       join: { sourceConnector: "", joinField: "", targetField: "" },
     }
-    addStep(selectedType, defaultConfigs[selectedType])
+    addStep(selectedType, configs[selectedType])
   }
 
   const handlePreview = () => {
@@ -149,42 +130,30 @@ export function TransformPipeline() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <BentoLabel>Verwerking</BentoLabel>
-        <h2 className="text-2xl font-extrabold tracking-tight mt-1">Data Transformatie</h2>
-        <p className="text-slate-400 text-sm">Transformeer data tussen GetConnector en UpdateConnector</p>
+        <h2 className="text-3xl font-extrabold tracking-tighter mt-1">Data Transformatie</h2>
+        <p className="text-slate-400 text-sm font-medium">Transformeer data tussen GetConnector en UpdateConnector</p>
       </div>
 
       {connectorData.length === 0 && (
-        <BentoCard className="flex flex-col items-center justify-center py-16 border-dashed border-2">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-100 mb-4"><Shuffle className="h-7 w-7 text-amber-500" /></div>
-          <p className="font-extrabold">Geen brondata</p>
-          <p className="text-sm text-slate-400">Haal eerst data op via de GetConnector Explorer</p>
+        <BentoCard index={0} className="flex flex-col items-center justify-center py-20 border-dashed border-2">
+          <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-amber-50 mb-5"><Shuffle className="h-9 w-9 text-amber-400" /></div>
+          <p className="text-xl font-extrabold tracking-tight">Geen brondata</p>
+          <p className="text-sm text-slate-400 font-medium">Haal eerst data op via de GetConnector Explorer</p>
         </BentoCard>
       )}
 
       {connectorData.length > 0 && (
         <>
-          {/* Source data stats */}
           <BentoGrid>
-            <BentoCard span={1} glass="blue">
-              <BentoLabel>Bronrijen</BentoLabel>
-              <div className="mt-1"><BentoValue mono>{connectorData.length}</BentoValue></div>
-            </BentoCard>
-            <BentoCard span={1}>
-              <BentoLabel>Kolommen</BentoLabel>
-              <div className="mt-1"><BentoValue mono>{sourceFields.length}</BentoValue></div>
-            </BentoCard>
-            <BentoCard span={1}>
-              <BentoLabel>Stappen</BentoLabel>
-              <div className="mt-1"><BentoValue mono>{steps.length}</BentoValue></div>
-            </BentoCard>
+            <BentoCard span={1} glass="blue" index={0}><BentoLabel>Bronrijen</BentoLabel><div className="mt-2"><BentoValue mono size="large">{connectorData.length}</BentoValue></div></BentoCard>
+            <BentoCard span={1} index={1}><BentoLabel>Kolommen</BentoLabel><div className="mt-2"><BentoValue mono size="large">{sourceFields.length}</BentoValue></div></BentoCard>
+            <BentoCard span={1} index={2}><BentoLabel>Stappen</BentoLabel><div className="mt-2"><BentoValue mono size="large">{steps.length}</BentoValue></div></BentoCard>
           </BentoGrid>
 
-          <div className="flex items-center justify-center">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"><ArrowDown className="h-4 w-4 text-slate-400" /></div>
-          </div>
+          <div className="flex items-center justify-center"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/80"><ArrowDown className="h-4 w-4 text-slate-400" /></div></div>
 
           {steps.map((step, index) => {
             const StepIcon = STEP_TYPES.find((t) => t.value === step.type)?.icon || Type
@@ -192,13 +161,13 @@ export function TransformPipeline() {
             const glassClass = STEP_GLASS[step.type] || ""
             return (
               <React.Fragment key={step.id}>
-                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...bentoSpring, delay: index * 0.05 }}>
-                  <BentoCard className={glassClass}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2.5">
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...bentoSpring, delay: index * 0.06 }}>
+                  <BentoCard index={0} className={glassClass}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
                         <GripVertical className="h-4 w-4 text-slate-300 cursor-grab" />
-                        <div className={`flex h-7 w-7 items-center justify-center rounded-xl ${colorClass}`}><StepIcon className="h-3.5 w-3.5" /></div>
-                        <span className="font-extrabold text-sm">Stap {index + 1}</span>
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${colorClass}`}><StepIcon className="h-4 w-4" /></div>
+                        <span className="font-extrabold text-sm tracking-tight">Stap {index + 1}</span>
                         <Badge variant="secondary" className="text-xs">{STEP_TYPES.find((t) => t.value === step.type)?.label}</Badge>
                       </div>
                       <Button size="icon" variant="ghost" onClick={() => removeStep(step.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -206,17 +175,15 @@ export function TransformPipeline() {
                     <StepEditor step={step} fields={sourceFields} onUpdate={(config) => updateStep(step.id, config)} onRemove={() => removeStep(step.id)} />
                   </BentoCard>
                 </motion.div>
-                <div className="flex items-center justify-center">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"><ArrowDown className="h-4 w-4 text-slate-400" /></div>
-                </div>
+                <div className="flex items-center justify-center"><div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/80"><ArrowDown className="h-4 w-4 text-slate-400" /></div></div>
               </React.Fragment>
             )
           })}
 
-          <BentoCard className="border-dashed border-2">
+          <BentoCard index={0} className="border-dashed border-2">
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Select value={selectedType} onValueChange={(val) => setSelectedType(val as TransformStep["type"])}>
-                <SelectTrigger className="w-full sm:w-[200px] rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-[200px] rounded-2xl"><SelectValue /></SelectTrigger>
                 <SelectContent>{STEP_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
               </Select>
               <Button variant="outline" onClick={handleAddStep}><Plus className="mr-1 h-4 w-4" /> Stap toevoegen</Button>
@@ -226,11 +193,11 @@ export function TransformPipeline() {
           </BentoCard>
 
           {previewData.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={bentoSpring}>
-              <BentoCard glass="emerald">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-200/50"><Columns className="h-3.5 w-3.5 text-emerald-700" /></div>
-                  <span className="font-bold text-sm">Preview getransformeerde data</span>
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={bentoSpring}>
+              <BentoCard glass="emerald" index={0} hoverGlow="emerald">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100/50"><Columns className="h-4 w-4 text-emerald-600" /></div>
+                  <span className="font-extrabold text-sm tracking-tight">Preview getransformeerde data</span>
                 </div>
                 <DataGrid data={previewData} />
               </BentoCard>

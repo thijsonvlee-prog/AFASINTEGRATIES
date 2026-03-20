@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { ArrowRight, CheckCircle, Eye, Loader2, Play, Send, Trash2, Plus, XCircle, Upload } from "lucide-react"
+import { ArrowRight, CheckCircle, Eye, Loader2, Send, Trash2, Plus, XCircle, Upload } from "lucide-react"
 import type { FieldMapping } from "@/types"
 
 export function UpdateConnectorPanel() {
@@ -82,41 +82,49 @@ export function UpdateConnectorPanel() {
 
   if (!activeConnectionId) {
     return (
-      <BentoCard className="flex flex-col items-center justify-center py-16 border-dashed border-2">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-100 mb-4"><Upload className="h-7 w-7 text-violet-500" /></div>
-        <p className="text-lg font-extrabold">Geen actieve verbinding</p>
-        <p className="text-sm text-slate-400">Activeer een verbinding om data te schrijven</p>
+      <BentoCard index={0} className="flex flex-col items-center justify-center py-20 border-dashed border-2">
+        <div className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-violet-50 mb-5"><Upload className="h-9 w-9 text-violet-400" /></div>
+        <p className="text-xl font-extrabold tracking-tight">Geen actieve verbinding</p>
+        <p className="text-sm text-slate-400 font-medium">Activeer een verbinding om data te schrijven</p>
       </BentoCard>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <BentoLabel>Schrijven</BentoLabel>
-        <h2 className="text-2xl font-extrabold tracking-tight mt-1">UpdateConnector</h2>
-        <p className="text-slate-400 text-sm">Data terugschrijven naar AFAS Profit</p>
+        <h2 className="text-3xl font-extrabold tracking-tighter mt-1">UpdateConnector</h2>
+        <p className="text-slate-400 text-sm font-medium">Data terugschrijven naar AFAS Profit</p>
       </div>
+
+      {previewData.length > 0 && (
+        <BentoGrid>
+          <BentoCard span={1} glass="violet" index={0}><BentoLabel>Bronrijen</BentoLabel><div className="mt-2"><BentoValue mono size="large">{previewData.length}</BentoValue></div></BentoCard>
+          <BentoCard span={1} index={1}><BentoLabel>Mappings</BentoLabel><div className="mt-2"><BentoValue mono size="large">{fieldMappings.length}</BentoValue></div></BentoCard>
+          <BentoCard span={1} index={2}><BentoLabel>Doelvelden</BentoLabel><div className="mt-2"><BentoValue mono size="large">{schemaFields.length}</BentoValue></div></BentoCard>
+        </BentoGrid>
+      )}
 
       <BentoGrid>
         {/* Connector & operatie */}
-        <BentoCard span={1} glass="violet">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-200/50"><Upload className="h-4 w-4 text-violet-700" /></div>
-            <span className="font-bold text-sm">Connector & Operatie</span>
+        <BentoCard span={1} glass="violet" index={0} hoverGlow="violet">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50"><Upload className="h-5 w-5 text-violet-500" /></div>
+            <span className="font-extrabold text-sm tracking-tight">Connector & Operatie</span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">UpdateConnector</Label>
+              <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">UpdateConnector</Label>
               <Select value={selectedConnector} onValueChange={setSelectedConnector}>
-                <SelectTrigger className="rounded-xl"><SelectValue placeholder="Kies een connector..." /></SelectTrigger>
+                <SelectTrigger className="rounded-2xl"><SelectValue placeholder="Kies een connector..." /></SelectTrigger>
                 <SelectContent>{updateConnectors.map((c) => <SelectItem key={c.id || c.name} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Operatie</Label>
+              <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">Operatie</Label>
               <Select value={operation} onValueChange={(v) => setOperation(v as "POST" | "PUT" | "DELETE")}>
-                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-2xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="POST">Insert (POST)</SelectItem>
                   <SelectItem value="PUT">Update (PUT)</SelectItem>
@@ -126,8 +134,8 @@ export function UpdateConnectorPanel() {
             </div>
             {schema ? (
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Schema velden</Label>
-                <div className="rounded-2xl border border-white/20 p-3 max-h-[200px] overflow-auto bg-white/40">
+                <Label className="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">Schema velden</Label>
+                <div className="rounded-2xl border border-white/20 p-3 max-h-[200px] overflow-auto bg-white/40 backdrop-blur-sm">
                   <div className="flex flex-wrap gap-1">{schemaFields.map((f) => <Badge key={f} variant="secondary" className="text-xs font-mono">{f}</Badge>)}</div>
                 </div>
               </div>
@@ -136,26 +144,26 @@ export function UpdateConnectorPanel() {
         </BentoCard>
 
         {/* Field mappings */}
-        <BentoCard span={2} glass="amber">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-200/50"><ArrowRight className="h-4 w-4 text-amber-700" /></div>
-              <span className="font-bold text-sm">Field Mapping</span>
+        <BentoCard span={2} glass="amber" index={1} hoverGlow="amber">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50"><ArrowRight className="h-5 w-5 text-amber-500" /></div>
+              <span className="font-extrabold text-sm tracking-tight">Field Mapping</span>
             </div>
             <Button size="sm" variant="outline" onClick={addMapping}><Plus className="mr-1 h-3 w-3" /> Mapping</Button>
           </div>
           <div className="space-y-3">
-            {fieldMappings.length === 0 && <p className="text-sm text-slate-400">Koppel bronvelden aan UpdateConnector velden</p>}
+            {fieldMappings.length === 0 && <p className="text-sm text-slate-400 font-medium">Koppel bronvelden aan UpdateConnector velden</p>}
             {fieldMappings.map((mapping, index) => (
-              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border border-white/20 p-2.5 bg-white/40">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-2xl border border-white/20 p-3 bg-white/40 backdrop-blur-sm">
                 <Select value={mapping.sourceField} onValueChange={(val) => updateMapping(index, { sourceField: val })}>
-                  <SelectTrigger className="w-full sm:w-[140px] rounded-xl"><SelectValue placeholder="Bronveld" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[160px] rounded-2xl"><SelectValue placeholder="Bronveld" /></SelectTrigger>
                   <SelectContent>{sourceFields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                 </Select>
                 <ArrowRight className="h-4 w-4 text-slate-300 shrink-0 hidden sm:block" />
                 <div className="flex items-center gap-2">
                   <Select value={mapping.targetField} onValueChange={(val) => updateMapping(index, { targetField: val })}>
-                    <SelectTrigger className="w-full sm:w-[140px] rounded-xl"><SelectValue placeholder="Doelveld" /></SelectTrigger>
+                    <SelectTrigger className="w-full sm:w-[160px] rounded-2xl"><SelectValue placeholder="Doelveld" /></SelectTrigger>
                     <SelectContent>{schemaFields.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
                   </Select>
                   <Button size="icon" variant="ghost" onClick={() => removeMapping(index)}><Trash2 className="h-3 w-3 text-destructive" /></Button>
@@ -166,27 +174,32 @@ export function UpdateConnectorPanel() {
         </BentoCard>
       </BentoGrid>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button variant="outline" onClick={handleDryRun} disabled={previewData.length === 0 || fieldMappings.length === 0}><Eye className="mr-2 h-4 w-4" /> Dry Run</Button>
-        <Button onClick={handleExecute} disabled={loading || previewData.length === 0 || fieldMappings.length === 0}>
-          {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-          Uitvoeren (<span className="font-mono">{previewData.length}</span> records)
-        </Button>
-      </div>
+      <BentoCard index={0} className="border-dashed border-2">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <Button variant="outline" onClick={handleDryRun} disabled={previewData.length === 0 || fieldMappings.length === 0}><Eye className="mr-2 h-4 w-4" /> Dry Run</Button>
+          <Button onClick={handleExecute} disabled={loading || previewData.length === 0 || fieldMappings.length === 0}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+            Uitvoeren (<span className="font-mono tabular-nums">{previewData.length}</span> records)
+          </Button>
+        </div>
+      </BentoCard>
 
       {executeResult && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={bentoSpring}
-          className={`flex items-center gap-3 rounded-3xl p-4 ${executeResult.success ? "glass-emerald text-emerald-800" : "glass-red text-red-800"}`}>
+          className={`flex items-center gap-3 rounded-[2.5rem] p-5 ${executeResult.success ? "glass-emerald text-emerald-800" : "glass-red text-red-800"}`}>
           {executeResult.success ? <CheckCircle className="h-5 w-5 text-emerald-500 animate-success-pop" /> : <XCircle className="h-5 w-5 text-red-500" />}
-          <span className="font-bold">{executeResult.message}</span>
+          <span className="font-extrabold">{executeResult.message}</span>
         </motion.div>
       )}
 
       {dryRunResult && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={bentoSpring}>
-          <BentoCard>
-            <span className="font-bold text-sm mb-3 block">Dry Run - Preview JSON Payload</span>
-            <pre className="rounded-2xl bg-slate-50 p-4 overflow-auto text-xs max-h-[400px] font-mono">{JSON.stringify(dryRunResult, null, 2)}</pre>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={bentoSpring}>
+          <BentoCard index={0} glass="blue">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100/50"><Eye className="h-4 w-4 text-sky-600" /></div>
+              <span className="font-extrabold text-sm tracking-tight">Dry Run - Preview JSON Payload</span>
+            </div>
+            <pre className="rounded-2xl bg-white/50 backdrop-blur-sm p-4 overflow-auto text-xs max-h-[400px] font-mono border border-white/20">{JSON.stringify(dryRunResult, null, 2)}</pre>
           </BentoCard>
         </motion.div>
       )}

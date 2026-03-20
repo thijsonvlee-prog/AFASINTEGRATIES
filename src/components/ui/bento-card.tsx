@@ -11,6 +11,8 @@ interface BentoCardProps {
   noPadding?: boolean
   className?: string
   children?: React.ReactNode
+  index?: number
+  hoverGlow?: "violet" | "sky" | "amber" | "emerald"
 }
 
 const spanMap = {
@@ -28,10 +30,17 @@ const glassMap = {
   white: "glass-white",
 }
 
+const glowMap = {
+  violet: "hover:shadow-glow-violet",
+  sky: "hover:shadow-glow-sky",
+  amber: "hover:shadow-glow-amber",
+  emerald: "hover:shadow-glow-emerald",
+}
+
 export const bentoSpring = {
   type: "spring" as const,
   stiffness: 300,
-  damping: 24,
+  damping: 22,
 }
 
 export function BentoCard({
@@ -41,19 +50,23 @@ export function BentoCard({
   noPadding,
   className,
   children,
+  index = 0,
+  hoverGlow,
 }: BentoCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      initial={{ opacity: 0, y: 24, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={bentoSpring}
-      whileHover={{ scale: 1.02 }}
+      transition={{ ...bentoSpring, delay: index * 0.06 }}
+      whileHover={{ y: -5, scale: 1.02 }}
       className={cn(
-        "rounded-3xl bg-white border border-white/20 shadow-bento transition-shadow duration-300 hover:shadow-bento-hover",
+        "rounded-[2.5rem] bg-white/80 backdrop-blur-xl border border-white/20",
+        "shadow-bento transition-all duration-300 hover:shadow-bento-hover",
         spanMap[span],
         rowSpan === 2 && "bento-row-2",
         glass && glassMap[glass],
-        !noPadding && "p-5 md:p-6",
+        hoverGlow && glowMap[hoverGlow],
+        !noPadding && "p-6 md:p-7",
         className
       )}
     >
@@ -78,7 +91,7 @@ export function BentoGrid({
 
 export function BentoLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
       {children}
     </span>
   )
@@ -87,12 +100,20 @@ export function BentoLabel({ children }: { children: React.ReactNode }) {
 export function BentoValue({
   children,
   mono,
+  size = "default",
 }: {
   children: React.ReactNode
   mono?: boolean
+  size?: "default" | "large"
 }) {
   return (
-    <span className={cn("text-2xl font-extrabold text-foreground", mono && "font-mono tabular-nums")}>
+    <span
+      className={cn(
+        "font-extrabold text-foreground tracking-tighter block",
+        size === "large" ? "text-4xl md:text-5xl" : "text-3xl",
+        mono && "font-mono tabular-nums"
+      )}
+    >
       {children}
     </span>
   )
