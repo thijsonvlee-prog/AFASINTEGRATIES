@@ -39,7 +39,7 @@ export function ToastContainer() {
           <div
             key={toast.id}
             className={cn(
-              "pointer-events-auto flex items-start gap-3 rounded-xl border p-4 shadow-lg animate-toast-enter",
+              "pointer-events-auto flex items-start gap-3 rounded-3xl border p-4 shadow-lg animate-toast-enter glass",
               styleMap[toast.type]
             )}
           >
